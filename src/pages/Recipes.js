@@ -1,81 +1,178 @@
-import React, { useState } from 'react';
-import { MagnifyingGlassIcon, BookOpenIcon, FireIcon, ScaleIcon } from '@heroicons/react/24/outline';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import '../styles/theme.css';
+import './Recipes.css';
 
-function Recipes() {
+const Recipes = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDiet, setSelectedDiet] = useState('all');
   const [selectedTime, setSelectedTime] = useState('all');
+  const [selectedCalories, setSelectedCalories] = useState('all');
+  const [selectedMealSlot, setSelectedMealSlot] = useState(null);
 
-  const diets = ['all', 'vegan', 'keto', 'paleo', 'vegetarian'];
+  useEffect(() => {
+    // Get the meal slot from the URL query parameters
+    const params = new URLSearchParams(location.search);
+    const day = params.get('day');
+    const mealType = params.get('mealType');
+    if (day && mealType) {
+      setSelectedMealSlot({ 
+        day: day.charAt(0).toUpperCase() + day.slice(1), 
+        mealType: mealType.charAt(0).toUpperCase() + mealType.slice(1) 
+      });
+    }
+  }, [location]);
+
+  const diets = ['all', 'vegan', 'vegetarian', 'keto', 'paleo'];
   const cookTimes = ['all', 'quick', 'medium', 'long'];
+  const calorieRanges = ['all', 'low', 'medium', 'high'];
 
   const recipes = [
     {
       id: 1,
-      name: 'High-Protein Chicken Bowl',
-      category: 'Lunch',
-      prepTime: '25 mins',
-      calories: 450,
-      protein: 35,
-      carbs: 30,
-      fats: 15,
-      diet: 'keto',
-      cost: '$$',
-      image: 'https://via.placeholder.com/150',
-      ingredients: ['Chicken breast', 'Brown rice', 'Broccoli', 'Olive oil'],
-      instructions: ['Cook chicken', 'Steam vegetables', 'Combine and serve']
+      name: 'Avocado Toast',
+      image: 'https://images.unsplash.com/photo-1588137378633-dea1336ce1c2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+      calories: 350,
+      prepTime: '10 mins',
+      diet: 'vegetarian',
+      timeCategory: 'quick',
+      calorieCategory: 'medium',
+      ingredients: ['Bread', 'Avocado', 'Eggs', 'Salt', 'Pepper'],
+      nutrition: {
+        protein: '12g',
+        carbs: '35g',
+        fat: '20g',
+        fiber: '8g'
+      }
     },
     {
       id: 2,
-      name: 'Quick Oatmeal Breakfast',
-      category: 'Breakfast',
-      prepTime: '10 mins',
-      calories: 300,
-      protein: 12,
-      carbs: 45,
-      fats: 8,
+      name: 'Greek Salad',
+      image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+      calories: 250,
+      prepTime: '15 mins',
       diet: 'vegetarian',
-      cost: '$',
-      image: 'https://via.placeholder.com/150',
-      ingredients: ['Oats', 'Milk', 'Banana', 'Honey'],
-      instructions: ['Cook oats', 'Add toppings', 'Serve warm']
+      timeCategory: 'quick',
+      calorieCategory: 'low',
+      ingredients: ['Cucumber', 'Tomatoes', 'Feta', 'Olives', 'Olive Oil'],
+      nutrition: {
+        protein: '8g',
+        carbs: '15g',
+        fat: '18g',
+        fiber: '6g'
+      }
+    },
+    {
+      id: 3,
+      name: 'Grilled Salmon',
+      image: 'https://images.unsplash.com/photo-1519708227418-c8fd941a6bae?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+      calories: 450,
+      prepTime: '25 mins',
+      diet: 'paleo',
+      timeCategory: 'medium',
+      calorieCategory: 'medium',
+      ingredients: ['Salmon', 'Lemon', 'Dill', 'Olive Oil', 'Salt', 'Pepper'],
+      nutrition: {
+        protein: '35g',
+        carbs: '5g',
+        fat: '28g',
+        fiber: '2g'
+      }
+    },
+    {
+      id: 4,
+      name: 'Quinoa Bowl',
+      image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+      calories: 400,
+      prepTime: '20 mins',
+      diet: 'vegan',
+      timeCategory: 'medium',
+      calorieCategory: 'medium',
+      ingredients: ['Quinoa', 'Chickpeas', 'Avocado', 'Cucumber', 'Tomatoes', 'Lemon'],
+      nutrition: {
+        protein: '15g',
+        carbs: '45g',
+        fat: '18g',
+        fiber: '12g'
+      }
     }
   ];
+
+  const handleRecipeSelect = (recipe) => {
+    if (selectedMealSlot) {
+      try {
+        // Get existing meal plan from session storage
+        const mealPlan = JSON.parse(sessionStorage.getItem('mealPlan') || '{}');
+        
+        // Initialize the day if it doesn't exist
+        if (!mealPlan[selectedMealSlot.day]) {
+          mealPlan[selectedMealSlot.day] = {};
+        }
+        
+        // Initialize the meal type if it doesn't exist
+        if (!mealPlan[selectedMealSlot.day][selectedMealSlot.mealType]) {
+          mealPlan[selectedMealSlot.day][selectedMealSlot.mealType] = [];
+        }
+        
+        // Add the recipe to the meal plan
+        mealPlan[selectedMealSlot.day][selectedMealSlot.mealType].push({
+          ...recipe,
+          addedAt: new Date().toISOString()
+        });
+        
+        // Save the updated meal plan
+        sessionStorage.setItem('mealPlan', JSON.stringify(mealPlan));
+        
+        // Navigate back to meal planner
+        navigate('/');
+      } catch (error) {
+        console.error('Error saving recipe to meal plan:', error);
+      }
+    }
+  };
 
   const filteredRecipes = recipes.filter(recipe => {
     const matchesSearch = recipe.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesDiet = selectedDiet === 'all' || recipe.diet === selectedDiet;
-    const matchesTime = selectedTime === 'all' || 
-      (selectedTime === 'quick' && parseInt(recipe.prepTime) <= 15) ||
-      (selectedTime === 'medium' && parseInt(recipe.prepTime) > 15 && parseInt(recipe.prepTime) <= 30) ||
-      (selectedTime === 'long' && parseInt(recipe.prepTime) > 30);
+    const matchesTime = selectedTime === 'all' || recipe.timeCategory === selectedTime;
+    const matchesCalories = selectedCalories === 'all' || recipe.calorieCategory === selectedCalories;
     
-    return matchesSearch && matchesDiet && matchesTime;
+    return matchesSearch && matchesDiet && matchesTime && matchesCalories;
   });
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Recipes</h1>
-          <p className="text-gray-600">Discover and save your favorite meals</p>
-        </div>
-        <div className="flex gap-4">
-          <div className="relative">
+    <div className="recipes-page">
+      <div className="page-background" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1490645930917-897ecb06fdf4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')" }} />
+      <div className="page-content-wrapper">
+        <div className="page-header">
+          <div>
+            <h1>Recipes</h1>
+            {selectedMealSlot && (
+              <p className="meal-slot-info">
+                Selecting {selectedMealSlot.mealType} for {selectedMealSlot.day}
+              </p>
+            )}
+          </div>
+          <div className="search-container">
             <input
               type="text"
               placeholder="Search recipes..."
-              className="input pl-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              className="search-input"
             />
-            <MagnifyingGlassIcon className="icon absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           </div>
-          <div className="flex gap-2">
+        </div>
+
+        <div className="filters-container">
+          <div className="filter-group">
+            <label>Diet:</label>
             <select 
-              className="input"
-              value={selectedDiet}
+              value={selectedDiet} 
               onChange={(e) => setSelectedDiet(e.target.value)}
+              className="filter-select"
             >
               {diets.map(diet => (
                 <option key={diet} value={diet}>
@@ -83,10 +180,14 @@ function Recipes() {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Cook Time:</label>
             <select 
-              className="input"
-              value={selectedTime}
+              value={selectedTime} 
               onChange={(e) => setSelectedTime(e.target.value)}
+              className="filter-select"
             >
               {cookTimes.map(time => (
                 <option key={time} value={time}>
@@ -95,76 +196,93 @@ function Recipes() {
               ))}
             </select>
           </div>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredRecipes.map((recipe) => (
-          <div key={recipe.id} className="card hover:shadow-lg transition-shadow">
-            <img
-              src={recipe.image}
-              alt={recipe.name}
-              className="w-full h-48 object-cover rounded-t-lg"
-            />
-            <div className="p-4">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">{recipe.name}</h3>
-                  <p className="text-sm text-gray-600">{recipe.category}</p>
-                </div>
-                <div className="flex flex-col items-end">
-                  <span className="bg-primary-1 text-white text-sm px-2 py-1 rounded">
+          <div className="filter-group">
+            <label>Calories:</label>
+            <select 
+              value={selectedCalories} 
+              onChange={(e) => setSelectedCalories(e.target.value)}
+              className="filter-select"
+            >
+              {calorieRanges.map(range => (
+                <option key={range} value={range}>
+                  {range.charAt(0).toUpperCase() + range.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="recipes-grid">
+          {filteredRecipes.map(recipe => (
+            <div 
+              key={recipe.id} 
+              className="recipe-card"
+            >
+              <div className="recipe-image" style={{ backgroundImage: `url(${recipe.image})` }} />
+              <div className="recipe-content">
+                <h3>{recipe.name}</h3>
+                <div className="recipe-meta">
+                  <span className="meta-item">
+                    <span className="icon">⚖️</span>
+                    {recipe.calories} cal
+                  </span>
+                  <span className="meta-item">
+                    <span className="icon">⏱️</span>
                     {recipe.prepTime}
                   </span>
-                  <span className="text-sm text-gray-600 mt-1">{recipe.cost}</span>
                 </div>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                <div className="text-center bg-gray-50 p-2 rounded">
-                  <div className="flex items-center justify-center gap-1 mb-1">
-                    <FireIcon className="icon text-primary-2" />
-                    <p className="text-sm font-medium">Calories</p>
+                <div className="recipe-nutrition">
+                  <h4>Nutrition per serving:</h4>
+                  <div className="nutrition-grid">
+                    <div className="nutrition-item">
+                      <span className="label">Protein</span>
+                      <span className="value">{recipe.nutrition.protein}</span>
+                    </div>
+                    <div className="nutrition-item">
+                      <span className="label">Carbs</span>
+                      <span className="value">{recipe.nutrition.carbs}</span>
+                    </div>
+                    <div className="nutrition-item">
+                      <span className="label">Fat</span>
+                      <span className="value">{recipe.nutrition.fat}</span>
+                    </div>
+                    <div className="nutrition-item">
+                      <span className="label">Fiber</span>
+                      <span className="value">{recipe.nutrition.fiber}</span>
+                    </div>
                   </div>
-                  <p className="text-lg font-medium">{recipe.calories}</p>
                 </div>
-                <div className="text-center bg-gray-50 p-2 rounded">
-                  <div className="flex items-center justify-center gap-1 mb-1">
-                    <ScaleIcon className="icon text-primary-2" />
-                    <p className="text-sm font-medium">Protein</p>
-                  </div>
-                  <p className="text-lg font-medium">{recipe.protein}g</p>
+                <div className="recipe-ingredients">
+                  <h4>Ingredients:</h4>
+                  <ul>
+                    {recipe.ingredients.map((ingredient, index) => (
+                      <li key={index}>{ingredient}</li>
+                    ))}
+                  </ul>
                 </div>
-                <div className="text-center bg-gray-50 p-2 rounded">
-                  <div className="flex items-center justify-center gap-1 mb-1">
-                    <BookOpenIcon className="icon text-primary-2" />
-                    <p className="text-sm font-medium">Carbs</p>
-                  </div>
-                  <p className="text-lg font-medium">{recipe.carbs}g</p>
-                </div>
+                <button 
+                  className="button button-primary"
+                  onClick={() => handleRecipeSelect(recipe)}
+                  disabled={!selectedMealSlot}
+                >
+                  <span className="icon">➕</span>
+                  {selectedMealSlot ? 'Add to Plan' : 'Select a Meal Slot First'}
+                </button>
               </div>
-
-              <div className="space-y-2">
-                <h4 className="font-medium text-gray-800">Ingredients:</h4>
-                <ul className="text-sm text-gray-600 list-disc list-inside">
-                  {recipe.ingredients.slice(0, 3).map((ingredient, index) => (
-                    <li key={index}>{ingredient}</li>
-                  ))}
-                  {recipe.ingredients.length > 3 && (
-                    <li>+{recipe.ingredients.length - 3} more</li>
-                  )}
-                </ul>
-              </div>
-
-              <button className="btn btn-primary w-full mt-4">
-                View Recipe
-              </button>
             </div>
+          ))}
+        </div>
+
+        {filteredRecipes.length === 0 && (
+          <div className="empty-state">
+            <span className="empty-state-icon">🔍</span>
+            <p>No recipes found matching your search</p>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
-}
+};
 
 export default Recipes; 
