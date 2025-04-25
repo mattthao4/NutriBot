@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 import '../styles/theme.css';
 import './MealPlanner.css';
 
@@ -17,7 +18,42 @@ const MealPlanner = () => {
   const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
 
   const handleMealSlotClick = (day, mealType) => {
-    navigate(`/meal-planner/recipes?day=${day.toLowerCase()}&mealType=${mealType.toLowerCase()}`);
+    // Store the selected meal slot in session storage
+    sessionStorage.setItem('selectedMealSlot', JSON.stringify({ day, mealType }));
+    navigate('/recipes');
+  };
+
+  const handleRemoveMeal = (e, day, mealType, recipeId) => {
+    e.stopPropagation(); // Prevent the meal slot click from firing
+    
+    const updatedMealPlan = { ...mealPlan };
+    
+    if (updatedMealPlan[day] && updatedMealPlan[day][mealType]) {
+      // Remove the recipe from the meal type
+      updatedMealPlan[day][mealType] = updatedMealPlan[day][mealType].filter(
+        recipe => recipe.id !== recipeId
+      );
+      
+      // If no recipes left for this meal type, remove the meal type
+      if (updatedMealPlan[day][mealType].length === 0) {
+        delete updatedMealPlan[day][mealType];
+      }
+      
+      // If no meal types left for this day, remove the day
+      if (Object.keys(updatedMealPlan[day]).length === 0) {
+        delete updatedMealPlan[day];
+      }
+      
+      // Save updated meal plan
+      sessionStorage.setItem('mealPlan', JSON.stringify(updatedMealPlan));
+      setMealPlan(updatedMealPlan);
+    }
+  };
+
+  const handleClearAll = () => {
+    // Clear the meal plan
+    sessionStorage.removeItem('mealPlan');
+    setMealPlan({});
   };
 
   const renderMealSlot = (day, mealType) => {
@@ -32,6 +68,13 @@ const MealPlanner = () => {
           <div className="meal-slot-content">
             {recipes.map((recipe, index) => (
               <div key={index} className="meal-item">
+                <button
+                  onClick={(e) => handleRemoveMeal(e, day, mealType, recipe.id)}
+                  className="remove-meal-button"
+                  aria-label="Remove meal"
+                >
+                  <XMarkIcon className="w-5 h-5" />
+                </button>
                 <div 
                   className="meal-item-image"
                   style={{ backgroundImage: `url(${recipe.image})` }}
@@ -58,21 +101,45 @@ const MealPlanner = () => {
 
   return (
     <div className="meal-planner-page">
-      <div className="page-background" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1490645930917-897ecb06fdf4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')" }} />
+      <div className="page-background" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1490818387583-1baba5e638af?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')" }} />
       <div className="page-content-wrapper">
-        <h1>Meal Planner</h1>
-        <div className="meal-grid">
-          <div className="meal-grid-header">
-            <div className="header-cell">Day</div>
+        <div className="page-header">
+          <h1>Weekly Meal Planner</h1>
+          <div className="page-actions">
+            <button className="button button-success">
+              <span className="icon">💾</span>
+              Save Plan
+            </button>
+            <button 
+              className="button button-danger"
+              onClick={handleClearAll}
+            >
+              <span className="icon">🗑️</span>
+              Clear All
+            </button>
+          </div>
+        </div>
+        
+        <div className="meal-planner-grid">
+          <div className="grid-header">
+            <div className="day-header">Day</div>
             {mealTypes.map(mealType => (
-              <div key={mealType} className="header-cell">{mealType}</div>
+              <div key={mealType} className="meal-header">
+                <span className="meal-icon">
+                  {mealType === 'Breakfast' ? '🍳' : 
+                   mealType === 'Lunch' ? '🥪' : 
+                   mealType === 'Dinner' ? '🍽️' : '🍎'}
+                </span>
+                {mealType}
+              </div>
             ))}
           </div>
+          
           {days.map(day => (
-            <div key={day} className="meal-grid-row">
+            <div key={day} className="day-row">
               <div className="day-cell">{day}</div>
               {mealTypes.map(mealType => (
-                <div key={mealType} className="meal-cell">
+                <div key={`${day}-${mealType}`} className="meal-cell">
                   {renderMealSlot(day, mealType)}
                 </div>
               ))}

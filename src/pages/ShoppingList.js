@@ -1,222 +1,265 @@
 import React, { useState, useEffect } from 'react';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 import '../styles/theme.css';
 import './ShoppingList.css';
-import { PlusIcon, TrashIcon, CheckIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 
 const ShoppingList = () => {
-  const [mealPlan, setMealPlan] = useState({});
-  const [shoppingList, setShoppingList] = useState([]);
-  const [categoryStats, setCategoryStats] = useState({});
-  const [newItem, setNewItem] = useState('');
-  const [newCategory, setNewCategory] = useState('Other');
-  const [newQuantity, setNewQuantity] = useState('1');
-  const [items, setItems] = useState([
-    { 
-      id: 1, 
-      name: 'Chicken breast', 
-      category: 'Meat', 
-      quantity: '1 lb', 
-      purchased: false,
-      expiryDate: '2023-04-20'
-    },
-    { 
-      id: 2, 
-      name: 'Brown rice', 
-      category: 'Grains', 
-      quantity: '2 lbs', 
-      purchased: false,
-      expiryDate: '2024-01-01'
-    },
-    { 
-      id: 3, 
-      name: 'Broccoli', 
-      category: 'Vegetables', 
-      quantity: '2 heads', 
-      purchased: true,
-      expiryDate: '2023-04-18'
-    },
-  ]);
+  const [shoppingList, setShoppingList] = useState({});
+  const [checkedItems, setCheckedItems] = useState({});
 
-  const categories = ['Meat', 'Vegetables', 'Fruits', 'Grains', 'Dairy', 'Other'];
+  const generateShoppingList = (mealPlan) => {
+    const newShoppingList = {};
+    
+    // Process each day in the meal plan
+    Object.entries(mealPlan).forEach(([day, meals]) => {
+      if (!meals) return;
+      
+      // Process each meal type in the day
+      Object.entries(meals).forEach(([mealType, mealItems]) => {
+        if (!mealItems || !Array.isArray(mealItems)) return;
+        
+        // Process each recipe in the meal
+        mealItems.forEach(recipe => {
+          if (!recipe || !recipe.ingredients) {
+            console.warn('Invalid recipe data:', recipe);
+            return;
+          }
 
-  useEffect(() => {
-    // Load meal plan from session storage
-    const savedMealPlan = JSON.parse(sessionStorage.getItem('mealPlan') || '{}');
-    setMealPlan(savedMealPlan);
-    generateShoppingList(savedMealPlan);
-  }, []);
-
-  const generateShoppingList = (plan) => {
-    const ingredients = new Map();
-    const categories = new Map();
-
-    // Process all recipes in the meal plan
-    Object.values(plan).forEach(day => {
-      Object.values(day).forEach(meals => {
-        meals.forEach(recipe => {
-          recipe.ingredients.forEach(ingredient => {
-            const count = ingredients.get(ingredient) || 0;
-            ingredients.set(ingredient, count + 1);
+          // Handle both array and string formats for ingredients
+          const ingredients = Array.isArray(recipe.ingredients) 
+            ? recipe.ingredients 
+            : recipe.ingredients.split(',').map(ing => ing.trim());
+          
+          // Process each ingredient
+          ingredients.forEach(ingredient => {
+            let ingredientName, ingredientCategory, ingredientQuantity, ingredientUnit;
             
-            // Categorize ingredients (simplified example)
-            const category = getIngredientCategory(ingredient);
-            const catCount = categories.get(category) || 0;
-            categories.set(category, catCount + 1);
+            if (typeof ingredient === 'string') {
+              // Handle string format: "Ingredient Name"
+              ingredientName = ingredient;
+              ingredientCategory = 'Others';
+              ingredientQuantity = 1;
+              ingredientUnit = 'unit';
+            } else if (typeof ingredient === 'object') {
+              // Handle object format: { name, category, quantity, unit }
+              ingredientName = ingredient.name;
+              ingredientCategory = ingredient.category || 'Others';
+              ingredientQuantity = ingredient.quantity || 1;
+              ingredientUnit = ingredient.unit || 'unit';
+            } else {
+              console.warn('Invalid ingredient format:', ingredient);
+              return;
+            }
+            
+            if (!ingredientName) {
+              console.warn('Missing ingredient name:', ingredient);
+              return;
+            }
+            
+            if (!newShoppingList[ingredientCategory]) {
+              newShoppingList[ingredientCategory] = [];
+            }
+            
+            // Check if ingredient already exists in the category
+            const existingIngredient = newShoppingList[ingredientCategory].find(
+              item => item.name.toLowerCase() === ingredientName.toLowerCase()
+            );
+            
+            if (existingIngredient) {
+              // Add quantities if they're numbers, otherwise just increment count
+              if (typeof existingIngredient.quantity === 'number' && typeof ingredientQuantity === 'number') {
+                existingIngredient.quantity += ingredientQuantity;
+              } else {
+                existingIngredient.quantity = (parseInt(existingIngredient.quantity) || 0) + (parseInt(ingredientQuantity) || 1);
+              }
+            } else {
+              newShoppingList[ingredientCategory].push({
+                name: ingredientName,
+                quantity: ingredientQuantity,
+                unit: ingredientUnit
+              });
+            }
           });
         });
       });
     });
-
-    // Convert to array and sort by count
-    const sortedIngredients = Array.from(ingredients.entries())
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count);
-
-    setShoppingList(sortedIngredients);
-    setCategoryStats(Object.fromEntries(categories));
+    
+    return newShoppingList;
   };
 
-  const getIngredientCategory = (ingredient) => {
-    // Simple categorization logic
-    const lowerIngredient = ingredient.toLowerCase();
-    if (lowerIngredient.includes('chicken') || lowerIngredient.includes('beef') || lowerIngredient.includes('fish')) {
-      return 'Proteins';
-    } else if (lowerIngredient.includes('rice') || lowerIngredient.includes('pasta') || lowerIngredient.includes('bread')) {
-      return 'Grains';
-    } else if (lowerIngredient.includes('apple') || lowerIngredient.includes('banana') || lowerIngredient.includes('berry')) {
-      return 'Fruits';
-    } else if (lowerIngredient.includes('spinach') || lowerIngredient.includes('lettuce') || lowerIngredient.includes('carrot')) {
-      return 'Vegetables';
-    } else if (lowerIngredient.includes('milk') || lowerIngredient.includes('cheese') || lowerIngredient.includes('yogurt')) {
-      return 'Dairy';
-    } else {
-      return 'Other';
+  useEffect(() => {
+    // Load initial meal plan and generate shopping list
+    const loadShoppingList = () => {
+      try {
+        const mealPlanStr = sessionStorage.getItem('mealPlan');
+        if (!mealPlanStr) {
+          console.log('No meal plan found in session storage');
+          return;
+        }
+
+        const mealPlan = JSON.parse(mealPlanStr);
+        console.log('Current meal plan:', mealPlan);
+        
+        if (!mealPlan || typeof mealPlan !== 'object') {
+          console.error('Invalid meal plan data:', mealPlan);
+          return;
+        }
+
+        const newShoppingList = generateShoppingList(mealPlan);
+        console.log('Generated shopping list:', newShoppingList);
+        
+        if (Object.keys(newShoppingList).length > 0) {
+          setShoppingList(newShoppingList);
+        }
+      } catch (error) {
+        console.error('Error loading shopping list:', error);
+      }
+    };
+
+    // Load checked items
+    const loadCheckedItems = () => {
+      try {
+        const checkedItemsStr = sessionStorage.getItem('checkedItems');
+        if (checkedItemsStr) {
+          const savedCheckedItems = JSON.parse(checkedItemsStr);
+          setCheckedItems(savedCheckedItems);
+        }
+      } catch (error) {
+        console.error('Error loading checked items:', error);
+      }
+    };
+
+    // Initial load
+    loadShoppingList();
+    loadCheckedItems();
+
+    // Set up storage event listener
+    const handleStorageChange = (e) => {
+      if (e.key === 'mealPlan') {
+        console.log('Meal plan changed in another tab');
+        loadShoppingList();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // Set up interval to check for local changes
+    const intervalId = setInterval(() => {
+      loadShoppingList();
+    }, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(intervalId);
+    };
+  }, []);
+
+  const handleCheckItem = (category, itemName) => {
+    const newCheckedItems = {
+      ...checkedItems,
+      [`${category}-${itemName}`]: !checkedItems[`${category}-${itemName}`]
+    };
+    
+    setCheckedItems(newCheckedItems);
+    sessionStorage.setItem('checkedItems', JSON.stringify(newCheckedItems));
+  };
+
+  const handleRemoveItem = (category, itemName) => {
+    const newShoppingList = { ...shoppingList };
+    newShoppingList[category] = newShoppingList[category].filter(
+      item => item.name !== itemName
+    );
+    
+    if (newShoppingList[category].length === 0) {
+      delete newShoppingList[category];
     }
+    
+    setShoppingList(newShoppingList);
+  };
+
+  const handleClearAll = () => {
+    setShoppingList({});
+    setCheckedItems({});
+    sessionStorage.removeItem('checkedItems');
   };
 
   const getCategoryColor = (category) => {
     const colors = {
-      'Proteins': '#FF6B6B',
-      'Grains': '#4ECDC4',
-      'Fruits': '#FFD166',
-      'Vegetables': '#06D6A0',
-      'Dairy': '#118AB2',
-      'Other': '#073B4C'
+      'Produce': 'var(--secondary-1)',
+      'Dairy': 'var(--primary-1)',
+      'Meat': 'var(--accent-2)',
+      'Pantry': 'var(--primary-2)',
+      'Others': 'var(--secondary-2)'
     };
-    return colors[category] || '#6C757D';
+    
+    return colors[category] || 'var(--primary-1)';
   };
-
-  const addItem = (e) => {
-    e.preventDefault();
-    if (newItem.trim()) {
-      setItems([
-        ...items,
-        {
-          id: items.length + 1,
-          name: newItem,
-          category: newCategory,
-          quantity: newQuantity,
-          purchased: false,
-          expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-        },
-      ]);
-      setNewItem('');
-      setNewQuantity('1');
-    }
-  };
-
-  const togglePurchased = (id) => {
-    setItems(
-      items.map((item) =>
-        item.id === id ? { ...item, purchased: !item.purchased } : item
-      )
-    );
-  };
-
-  const deleteItem = (id) => {
-    setItems(items.filter((item) => item.id !== id));
-  };
-
-  const getItemsByCategory = () => {
-    return items.reduce((acc, item) => {
-      if (!acc[item.category]) {
-        acc[item.category] = [];
-      }
-      acc[item.category].push(item);
-      return acc;
-    }, {});
-  };
-
-  const itemsByCategory = getItemsByCategory();
 
   return (
     <div className="shopping-list-page">
-      <div className="page-background" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1490645930917-897ecb06fdf4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')" }} />
+      <div className="page-background" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1490818387583-1baba5e638af?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')" }} />
       <div className="page-content-wrapper">
-        <h1>Shopping List</h1>
-        
-        <div className="stats-container">
-          <div className="stats-card">
-            <h3>Ingredients by Category</h3>
-            <div className="category-chart">
-              {Object.entries(categoryStats).map(([category, count]) => (
-                <div 
-                  key={category} 
-                  className="category-bar"
-                  style={{
-                    width: `${(count / shoppingList.length) * 100}%`,
-                    backgroundColor: getCategoryColor(category)
-                  }}
-                >
-                  <span className="category-label">{category}</span>
-                  <span className="category-count">{count}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          <div className="stats-card">
-            <h3>Most Used Ingredients</h3>
-            <div className="ingredients-chart">
-              {shoppingList.slice(0, 5).map((item, index) => (
-                <div key={item.name} className="ingredient-bar">
-                  <div 
-                    className="bar-fill"
-                    style={{
-                      width: `${(item.count / shoppingList[0].count) * 100}%`,
-                      backgroundColor: getCategoryColor(getIngredientCategory(item.name))
-                    }}
-                  />
-                  <span className="ingredient-label">{item.name}</span>
-                  <span className="ingredient-count">{item.count}</span>
-                </div>
-              ))}
-            </div>
+        <div className="page-header">
+          <h1>Shopping List</h1>
+          <div className="page-actions">
+            <button className="button button-success">
+              <span className="icon">💾</span>
+              Save List
+            </button>
+            <button 
+              className="button button-danger"
+              onClick={handleClearAll}
+            >
+              <span className="icon">🗑️</span>
+              Clear All
+            </button>
           </div>
         </div>
-
-        <div className="shopping-list-container">
-          <h2>All Ingredients</h2>
-          <div className="ingredients-grid">
-            {shoppingList.map((item, index) => (
-              <div 
-                key={item.name} 
-                className="ingredient-card"
-                style={{ borderColor: getCategoryColor(getIngredientCategory(item.name)) }}
-              >
-                <div className="ingredient-header">
-                  <h3>{item.name}</h3>
-                  <span className="ingredient-category">
-                    {getIngredientCategory(item.name)}
-                  </span>
+        
+        {Object.keys(shoppingList).length === 0 ? (
+          <div className="empty-state">
+            <p>Your shopping list is empty. Add meals to your meal planner to see ingredients here.</p>
+          </div>
+        ) : (
+          <div className="shopping-list-grid">
+            {Object.entries(shoppingList).map(([category, items]) => (
+              <div key={category} className="category-section">
+                <div 
+                  className="category-header"
+                  style={{ backgroundColor: getCategoryColor(category) }}
+                >
+                  <h3>{category}</h3>
+                  <span className="item-count">{items.length} items</span>
                 </div>
-                <div className="ingredient-count-badge">
-                  {item.count} {item.count === 1 ? 'recipe' : 'recipes'}
+                <div className="category-content">
+                  {items.map((item, index) => (
+                    <div key={index} className="shopping-item">
+                      <input
+                        type="checkbox"
+                        className="item-checkbox"
+                        checked={checkedItems[`${category}-${item.name}`] || false}
+                        onChange={() => handleCheckItem(category, item.name)}
+                      />
+                      <div className="item-details">
+                        <h4 className="item-name">{item.name}</h4>
+                        <div className="item-quantity">
+                          {item.quantity} {item.unit}
+                        </div>
+                      </div>
+                      <button
+                        className="remove-item-button"
+                        onClick={() => handleRemoveItem(category, item.name)}
+                        aria-label="Remove item"
+                      >
+                        <XMarkIcon className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

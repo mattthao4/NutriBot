@@ -4,7 +4,8 @@ import Header from './components/layout/Header';
 import Recipes from './pages/Recipes';
 import ShoppingList from './pages/ShoppingList';
 import WeeklyReport from './pages/WeeklyReport';
-import MealPlanner from './components/MealPlanner';
+import MealPlanner from './pages/MealPlanner';
+import Dashboard from './pages/Dashboard';
 import './styles.css';
 
 function App() {
@@ -14,7 +15,8 @@ function App() {
         <Header />
         <main className="main container">
           <Routes>
-            <Route path="/" element={<MealPlanner />} />
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/meal-planner" element={<MealPlanner />} />
             <Route path="/recipes" element={<Recipes />} />
             <Route path="/shopping-list" element={<ShoppingList />} />
             <Route path="/weekly-report" element={<WeeklyReport />} />

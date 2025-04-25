@@ -13,17 +13,18 @@ const Recipes = () => {
   const [selectedMealSlot, setSelectedMealSlot] = useState(null);
 
   useEffect(() => {
-    // Get the meal slot from the URL query parameters
-    const params = new URLSearchParams(location.search);
-    const day = params.get('day');
-    const mealType = params.get('mealType');
-    if (day && mealType) {
+    // Get the meal slot from session storage
+    const savedMealSlot = JSON.parse(sessionStorage.getItem('selectedMealSlot') || 'null');
+    if (savedMealSlot) {
       setSelectedMealSlot({ 
-        day: day.charAt(0).toUpperCase() + day.slice(1), 
-        mealType: mealType.charAt(0).toUpperCase() + mealType.slice(1) 
+        day: savedMealSlot.day, 
+        mealType: savedMealSlot.mealType 
       });
+    } else {
+      // If no meal slot is selected, redirect to meal planner
+      navigate('/meal-planner');
     }
-  }, [location]);
+  }, [navigate]);
 
   const diets = ['all', 'vegan', 'vegetarian', 'keto', 'paleo'];
   const cookTimes = ['all', 'quick', 'medium', 'long'];
@@ -125,8 +126,11 @@ const Recipes = () => {
         // Save the updated meal plan
         sessionStorage.setItem('mealPlan', JSON.stringify(mealPlan));
         
+        // Clear the selected meal slot
+        sessionStorage.removeItem('selectedMealSlot');
+        
         // Navigate back to meal planner
-        navigate('/');
+        navigate('/meal-planner');
       } catch (error) {
         console.error('Error saving recipe to meal plan:', error);
       }
