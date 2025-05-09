@@ -1,30 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useRecoilState } from 'recoil';
+import { mealPlanState, selectedMealSlotState, getMealPlanKey, formatDate } from '../recoil/atoms';
 import '../styles/theme.css';
 import './Recipes.css';
 
 const Recipes = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDiet, setSelectedDiet] = useState('all');
   const [selectedTime, setSelectedTime] = useState('all');
   const [selectedCalories, setSelectedCalories] = useState('all');
-  const [selectedMealSlot, setSelectedMealSlot] = useState(null);
+  const [selectedMealSlot, setSelectedMealSlot] = useRecoilState(selectedMealSlotState);
+  const [mealPlan, setMealPlan] = useRecoilState(mealPlanState);
 
   useEffect(() => {
-    // Get the meal slot from session storage
-    const savedMealSlot = JSON.parse(sessionStorage.getItem('selectedMealSlot') || 'null');
+    // Get the meal slot from localStorage
+    const savedMealSlot = JSON.parse(localStorage.getItem('selectedMealSlot') || 'null');
     if (savedMealSlot) {
-      setSelectedMealSlot({ 
-        day: savedMealSlot.day, 
-        mealType: savedMealSlot.mealType 
-      });
+      setSelectedMealSlot(savedMealSlot);
     } else {
       // If no meal slot is selected, redirect to meal planner
       navigate('/meal-planner');
     }
-  }, [navigate]);
+  }, [navigate, setSelectedMealSlot]);
 
   const diets = ['all', 'vegan', 'vegetarian', 'keto', 'paleo'];
   const cookTimes = ['all', 'quick', 'medium', 'long'];
@@ -34,7 +33,7 @@ const Recipes = () => {
     {
       id: 1,
       name: 'Avocado Toast',
-      image: 'https://images.unsplash.com/photo-1588137378633-dea1336ce1c2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+      image: 'https://cdn.loveandlemons.com/wp-content/uploads/2020/01/avocado-toast-480x270.jpg',
       calories: 350,
       prepTime: '10 mins',
       diet: 'vegetarian',
@@ -68,7 +67,7 @@ const Recipes = () => {
     {
       id: 3,
       name: 'Grilled Salmon',
-      image: 'https://images.unsplash.com/photo-1519708227418-c8fd941a6bae?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+      image: 'https://res.cloudinary.com/hksqkdlah/image/upload/41765-sfs-grilled-salmon-10664.jpg',
       calories: 450,
       prepTime: '25 mins',
       diet: 'paleo',
@@ -98,37 +97,134 @@ const Recipes = () => {
         fat: '18g',
         fiber: '12g'
       }
+    },
+    {
+      id: 5,
+      name: 'Vegan Buddha Bowl',
+      image: 'https://cdn.loveandlemons.com/wp-content/uploads/2020/06/IMG_25456.jpg',
+      calories: 420,
+      prepTime: '20 mins',
+      diet: 'vegan',
+      timeCategory: 'medium',
+      calorieCategory: 'medium',
+      ingredients: ['Quinoa', 'Chickpeas', 'Sweet Potato', 'Spinach', 'Tahini'],
+      nutrition: {
+        protein: '16g',
+        carbs: '60g',
+        fat: '12g',
+        fiber: '10g'
+      }
+    },
+    {
+      id: 6,
+      name: 'Chicken Caesar Salad',
+      image: 'https://cdn.apartmenttherapy.info/image/upload/f_jpg,q_auto:eco,c_fill,g_auto,w_1500,ar_1:1/k%2FPhoto%2FRecipes%2F2024-04-chicken-caesar-salad%2Fchicken-caesar-salad-653',
+      calories: 350,
+      prepTime: '15 mins',
+      diet: 'keto',
+      timeCategory: 'quick',
+      calorieCategory: 'medium',
+      ingredients: ['Chicken Breast', 'Romaine', 'Parmesan', 'Caesar Dressing', 'Croutons'],
+      nutrition: {
+        protein: '30g',
+        carbs: '10g',
+        fat: '20g',
+        fiber: '3g'
+      }
+    },
+    {
+      id: 7,
+      name: 'Egg Muffins',
+      image: 'https://easyfamilyrecipes.com/wp-content/uploads/2023/03/Ham-and-Cheese-Egg-Muffins-Recipe.jpg',
+      calories: 120,
+      prepTime: '25 mins',
+      diet: 'keto',
+      timeCategory: 'quick',
+      calorieCategory: 'low',
+      ingredients: ['Eggs', 'Spinach', 'Bell Pepper', 'Cheese'],
+      nutrition: {
+        protein: '8g',
+        carbs: '2g',
+        fat: '8g',
+        fiber: '1g'
+      }
+    },
+    {
+      id: 8,
+      name: 'Vegetarian Chili',
+      image: 'https://www.tasteofhome.com/wp-content/uploads/2018/01/Vegetarian-Chili-Ole-_EXPS_THESCODR22_138856_DR_12_15_2b.jpg',
+      calories: 300,
+      prepTime: '40 mins',
+      diet: 'vegetarian',
+      timeCategory: 'long',
+      calorieCategory: 'medium',
+      ingredients: ['Beans', 'Tomatoes', 'Corn', 'Bell Pepper', 'Onion'],
+      nutrition: {
+        protein: '12g',
+        carbs: '50g',
+        fat: '5g',
+        fiber: '14g'
+      }
+    },
+    {
+      id: 9,
+      name: 'Fruit & Nut Snack Bars',
+      image: 'https://wholeandheavenlyoven.com/wp-content/uploads/2015/08/fruit-n-nut-bars6.jpg',
+      calories: 180,
+      prepTime: '10 mins',
+      diet: 'vegan',
+      timeCategory: 'quick',
+      calorieCategory: 'low',
+      ingredients: ['Oats', 'Dates', 'Almonds', 'Peanut Butter', 'Maple Syrup'],
+      nutrition: {
+        protein: '4g',
+        carbs: '28g',
+        fat: '6g',
+        fiber: '3g'
+      }
     }
   ];
 
   const handleRecipeSelect = (recipe) => {
     if (selectedMealSlot) {
       try {
-        // Get existing meal plan from session storage
-        const mealPlan = JSON.parse(sessionStorage.getItem('mealPlan') || '{}');
-        
+        // Get the current meal plan for the selected week
+        const weekKey = selectedMealSlot.week;
+        const currentMealPlan = JSON.parse(JSON.stringify(mealPlan));
+
         // Initialize the day if it doesn't exist
-        if (!mealPlan[selectedMealSlot.day]) {
-          mealPlan[selectedMealSlot.day] = {};
+        if (!currentMealPlan[selectedMealSlot.day]) {
+          currentMealPlan[selectedMealSlot.day] = {};
         }
-        
+
         // Initialize the meal type if it doesn't exist
-        if (!mealPlan[selectedMealSlot.day][selectedMealSlot.mealType]) {
-          mealPlan[selectedMealSlot.day][selectedMealSlot.mealType] = [];
+        if (!currentMealPlan[selectedMealSlot.day][selectedMealSlot.mealType]) {
+          currentMealPlan[selectedMealSlot.day][selectedMealSlot.mealType] = [];
         }
-        
+
         // Add the recipe to the meal plan
-        mealPlan[selectedMealSlot.day][selectedMealSlot.mealType].push({
+        currentMealPlan[selectedMealSlot.day][selectedMealSlot.mealType].push({
           ...recipe,
-          addedAt: new Date().toISOString()
+          addedAt: new Date().toISOString(),
+          // Flatten macros for compatibility
+          protein: recipe.nutrition?.protein ? parseInt(recipe.nutrition.protein) : 0,
+          carbs: recipe.nutrition?.carbs ? parseInt(recipe.nutrition.carbs) : 0,
+          fat: recipe.nutrition?.fat ? parseInt(recipe.nutrition.fat) : 0,
+          // Normalize ingredients to objects with a name property
+          ingredients: Array.isArray(recipe.ingredients)
+            ? recipe.ingredients.map(ing =>
+                typeof ing === 'string' ? { name: ing } : ing
+              )
+            : [],
         });
-        
-        // Save the updated meal plan
-        sessionStorage.setItem('mealPlan', JSON.stringify(mealPlan));
-        
+
+        // Update the meal plan state
+        setMealPlan(currentMealPlan);
+
         // Clear the selected meal slot
-        sessionStorage.removeItem('selectedMealSlot');
-        
+        localStorage.removeItem('selectedMealSlot');
+        setSelectedMealSlot(null);
+
         // Navigate back to meal planner
         navigate('/meal-planner');
       } catch (error) {
@@ -146,6 +242,63 @@ const Recipes = () => {
     return matchesSearch && matchesDiet && matchesTime && matchesCalories;
   });
 
+  const formatMealSlotInfo = (mealSlot) => {
+    if (!mealSlot) return '';
+    
+    // Parse the week key to get the date
+    const weekDate = new Date(mealSlot.week);
+    const dayIndex = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].indexOf(mealSlot.day);
+    
+    // Add the day offset to get the correct date
+    const mealDate = new Date(weekDate);
+    mealDate.setDate(weekDate.getDate() + dayIndex);
+    
+    return `${mealSlot.mealType} for ${mealDate.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    })}`;
+  };
+
+  const getAddedMealTypes = (recipeId) => {
+    if (!mealPlan || !selectedMealSlot) return null;
+    
+    const addedMealTypes = new Set();
+    // Only check the selected day
+    const selectedDay = selectedMealSlot.day;
+    if (mealPlan[selectedDay]) {
+      Object.entries(mealPlan[selectedDay]).forEach(([mealType, recipes]) => {
+        if (recipes.some(r => r.id === recipeId)) {
+          addedMealTypes.add(mealType);
+        }
+      });
+    }
+
+    if (addedMealTypes.size === 0) return null;
+
+    const mealTypes = Array.from(addedMealTypes);
+    if (mealTypes.length === 1) {
+      return `Added for ${mealTypes[0]}`;
+    } else if (mealTypes.length === 2) {
+      return `Added for ${mealTypes[0]} and ${mealTypes[1]}`;
+    } else {
+      return `Added for ${mealTypes.slice(0, -1).join(', ')}, and ${mealTypes[mealTypes.length - 1]}`;
+    }
+  };
+
+  const getTotalOccurrences = (recipeId) => {
+    if (!mealPlan) return 0;
+    
+    let total = 0;
+    Object.values(mealPlan).forEach(dayMeals => {
+      Object.values(dayMeals).forEach(recipes => {
+        total += recipes.filter(r => r.id === recipeId).length;
+      });
+    });
+    return total;
+  };
+
   return (
     <div className="recipes-page">
       <div className="page-background" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1490645930917-897ecb06fdf4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')" }} />
@@ -155,7 +308,7 @@ const Recipes = () => {
             <h1>Recipes</h1>
             {selectedMealSlot && (
               <p className="meal-slot-info">
-                Selecting {selectedMealSlot.mealType} for {selectedMealSlot.day}
+                Selecting {formatMealSlotInfo(selectedMealSlot)}
               </p>
             )}
           </div>
@@ -225,7 +378,17 @@ const Recipes = () => {
             >
               <div className="recipe-image" style={{ backgroundImage: `url(${recipe.image})` }} />
               <div className="recipe-content">
-                <h3>{recipe.name}</h3>
+                <div className="recipe-header">
+                  <h3>{recipe.name}</h3>
+                  <div className="recipe-tags">
+                    {getAddedMealTypes(recipe.id) && (
+                      <span className="added-label">{getAddedMealTypes(recipe.id)}</span>
+                    )}
+                    {getTotalOccurrences(recipe.id) > 0 && (
+                      <span className="total-label">Total times added: {getTotalOccurrences(recipe.id)}</span>
+                    )}
+                  </div>
+                </div>
                 <div className="recipe-meta">
                   <span className="meta-item">
                     <span className="icon">⚖️</span>
@@ -261,7 +424,7 @@ const Recipes = () => {
                   <h4>Ingredients:</h4>
                   <ul>
                     {recipe.ingredients.map((ingredient, index) => (
-                      <li key={index}>{ingredient}</li>
+                      <li key={index}>{typeof ingredient === 'string' ? ingredient : ingredient.name}</li>
                     ))}
                   </ul>
                 </div>

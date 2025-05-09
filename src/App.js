@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { RecoilRoot } from 'recoil';
 import Header from './components/layout/Header';
 import Recipes from './pages/Recipes';
 import ShoppingList from './pages/ShoppingList';
@@ -10,20 +11,22 @@ import './styles.css';
 
 function App() {
   return (
-    <Router>
-      <div className="app">
-        <Header />
-        <main className="main container">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/meal-planner" element={<MealPlanner />} />
-            <Route path="/recipes" element={<Recipes />} />
-            <Route path="/shopping-list" element={<ShoppingList />} />
-            <Route path="/weekly-report" element={<WeeklyReport />} />
-          </Routes>
-        </main>
-      </div>
-    </Router>
+    <RecoilRoot>
+      <Router>
+        <div className="app">
+          <Header />
+          <main className="main container">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/meal-planner" element={<MealPlanner />} />
+              <Route path="/recipes" element={<Recipes />} />
+              <Route path="/shopping-list" element={<ShoppingList />} />
+              <Route path="/weekly-report" element={<WeeklyReport />} />
+            </Routes>
+          </main>
+        </div>
+      </Router>
+    </RecoilRoot>
   );
 }
 

@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { ChartBarIcon, CalendarIcon, FireIcon, ScaleIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon, BeakerIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useRecoilState } from 'recoil';
+import { mealPlanState, currentWeekState } from '../recoil/atoms';
 
 function Dashboard() {
   const [selectedTimeframe, setSelectedTimeframe] = useState('week');
-  const [mealPlan, setMealPlan] = useState({});
+  const [mealPlan, setMealPlan] = useRecoilState(mealPlanState);
+  const [currentWeek] = useRecoilState(currentWeekState);
   const [recentMeals, setRecentMeals] = useState([]);
   const [upcomingMeals, setUpcomingMeals] = useState([]);
   const [stats, setStats] = useState({
@@ -34,11 +37,8 @@ function Dashboard() {
   });
 
   useEffect(() => {
-    // Load meal plan from session storage
-    const savedMealPlan = JSON.parse(sessionStorage.getItem('mealPlan') || '{}');
-    setMealPlan(savedMealPlan);
-    updateMealsAndStats(savedMealPlan);
-  }, []);
+    updateMealsAndStats(mealPlan);
+  }, [mealPlan]);
 
   const updateMealsAndStats = (plan) => {
     const today = new Date();
@@ -57,16 +57,16 @@ function Dashboard() {
             name: recipe.name,
             time: `${day} ${mealType}`,
             calories: recipe.calories,
-            protein: parseInt(recipe.nutrition.protein),
-            carbs: parseInt(recipe.nutrition.carbs),
-            fats: parseInt(recipe.nutrition.fat)
+            protein: recipe.protein || 0,
+            carbs: recipe.carbs || 0,
+            fats: recipe.fat || 0
           };
 
           // Add to recent or upcoming based on date
           if (mealDate <= today) {
             recent.push(mealData);
             totalCalories += recipe.calories;
-            totalProtein += parseInt(recipe.nutrition.protein);
+            totalProtein += recipe.protein || 0;
           } else {
             upcoming.push(mealData);
           }
@@ -110,31 +110,30 @@ function Dashboard() {
     // Parse the mealId to get day, mealType, and recipeId
     const [day, mealType, recipeId] = mealId.split('-');
     
-    // Get current meal plan
-    const currentMealPlan = JSON.parse(sessionStorage.getItem('mealPlan') || '{}');
+    // Create a new meal plan object
+    const updatedMealPlan = { ...mealPlan };
     
     // Remove the specific recipe from the meal plan
-    if (currentMealPlan[day] && currentMealPlan[day][mealType]) {
-      currentMealPlan[day][mealType] = currentMealPlan[day][mealType].filter(
+    if (updatedMealPlan[day] && updatedMealPlan[day][mealType]) {
+      updatedMealPlan[day][mealType] = updatedMealPlan[day][mealType].filter(
         recipe => recipe.id !== parseInt(recipeId)
       );
       
       // If no recipes left for this meal type, remove the meal type
-      if (currentMealPlan[day][mealType].length === 0) {
-        delete currentMealPlan[day][mealType];
+      if (updatedMealPlan[day][mealType].length === 0) {
+        delete updatedMealPlan[day][mealType];
       }
       
       // If no meal types left for this day, remove the day
-      if (Object.keys(currentMealPlan[day]).length === 0) {
-        delete currentMealPlan[day];
+      if (Object.keys(updatedMealPlan[day]).length === 0) {
+        delete updatedMealPlan[day];
       }
       
-      // Save updated meal plan
-      sessionStorage.setItem('mealPlan', JSON.stringify(currentMealPlan));
+      // Update Recoil state
+      setMealPlan(updatedMealPlan);
       
-      // Update state
-      setMealPlan(currentMealPlan);
-      updateMealsAndStats(currentMealPlan);
+      // Save to session storage
+      sessionStorage.setItem('mealPlan-' + currentWeek, JSON.stringify(updatedMealPlan));
     }
   };
 

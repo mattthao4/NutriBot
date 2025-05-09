@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useRecoilState } from 'recoil';
+import { mealPlanState, currentWeekState } from '../recoil/atoms';
 import '../styles/theme.css';
 import './WeeklyReport.css';
 import { CalendarIcon, ChartBarIcon, ArrowTrendingUpIcon, FireIcon, ScaleIcon, BeakerIcon } from '@heroicons/react/24/outline';
 
 const WeeklyReport = () => {
+  const navigate = useNavigate();
   const [selectedWeek, setSelectedWeek] = useState(0);
-  const [mealPlan, setMealPlan] = useState({});
-  const [nutritionStats, setNutritionStats] = useState({
+  const [mealPlan] = useRecoilState(mealPlanState);
+  const [currentWeek, setCurrentWeek] = useRecoilState(currentWeekState);
+  const [nutritionData, setNutritionData] = useState({
     totalCalories: 0,
-    averageCalories: 0,
-    protein: 0,
-    carbs: 0,
-    fat: 0,
-    fiber: 0
+    totalProtein: 0,
+    totalCarbs: 0,
+    totalFat: 0,
+    dailyAverages: {},
+    mealTypeBreakdown: {}
   });
   const [mealTypeStats, setMealTypeStats] = useState({});
 
@@ -54,57 +59,123 @@ const WeeklyReport = () => {
     }
   ];
 
-  const currentWeek = weeks[selectedWeek];
+  // Initialize currentWeek if it's undefined
+  useEffect(() => {
+    if (!currentWeek) {
+      const defaultWeek = {
+        meals: [],
+        progress: {
+          weight: { start: 0, end: 0 },
+          bodyFat: { start: 0, end: 0 },
+          waterIntake: { average: 0, goal: 0 }
+        },
+        achievements: [],
+        improvements: []
+      };
+      setCurrentWeek(defaultWeek);
+    }
+  }, [currentWeek]);
 
   useEffect(() => {
-    // Load meal plan from session storage
-    const savedMealPlan = JSON.parse(sessionStorage.getItem('mealPlan') || '{}');
-    setMealPlan(savedMealPlan);
-    calculateStats(savedMealPlan);
-  }, []);
+    calculateNutritionData(mealPlan);
+  }, [mealPlan]);
 
-  const calculateStats = (plan) => {
-    let totalCalories = 0;
-    let totalMeals = 0;
-    let totalProtein = 0;
-    let totalCarbs = 0;
-    let totalFat = 0;
-    let totalFiber = 0;
-    const mealTypeCounts = {};
+  useEffect(() => {
+    // Set up storage event listener
+    const handleStorageChange = (e) => {
+      if (e.key === 'mealPlan-' + currentWeek) {
+        calculateNutritionData(mealPlan);
+      }
+    };
 
-    // Process all recipes in the meal plan
-    Object.values(plan).forEach(day => {
-      Object.entries(day).forEach(([mealType, meals]) => {
-        meals.forEach(recipe => {
-          totalCalories += recipe.calories;
-          totalProtein += parseInt(recipe.nutrition.protein);
-          totalCarbs += parseInt(recipe.nutrition.carbs);
-          totalFat += parseInt(recipe.nutrition.fat);
-          totalFiber += parseInt(recipe.nutrition.fiber);
-          totalMeals++;
+    window.addEventListener('storage', handleStorageChange);
 
-          // Count meals by type
-          mealTypeCounts[mealType] = (mealTypeCounts[mealType] || 0) + 1;
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [mealPlan, currentWeek]);
+
+  const calculateNutritionData = (plan) => {
+    if (!plan) return;
+
+    const dailyTotals = {};
+    const mealTypeTotals = {
+      breakfast: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+      lunch: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+      dinner: { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    };
+
+    // Process all meals in the plan
+    Object.entries(plan).forEach(([day, meals]) => {
+      if (!meals) return;
+      
+      dailyTotals[day] = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+
+      Object.entries(meals).forEach(([mealType, recipes]) => {
+        if (!recipes || !Array.isArray(recipes)) return;
+
+        recipes.forEach(recipe => {
+          if (!recipe) return;
+
+          // Extract nutrition values with proper null checks and defaults
+          const calories = Number(recipe.calories || 0);
+          const protein = Number(recipe.protein || recipe.nutrition?.protein?.replace('g', '') || 0);
+          const carbs = Number(recipe.carbs || recipe.nutrition?.carbs?.replace('g', '') || 0);
+          const fat = Number(recipe.fat || recipe.nutrition?.fat?.replace('g', '') || 0);
+
+          // Add to daily totals with null checks
+          if (dailyTotals[day]) {
+            dailyTotals[day].calories += calories;
+            dailyTotals[day].protein += protein;
+            dailyTotals[day].carbs += carbs;
+            dailyTotals[day].fat += fat;
+          }
+
+          // Add to meal type totals with null checks
+          const normalizedMealType = mealType.toLowerCase();
+          if (mealTypeTotals[normalizedMealType]) {
+            mealTypeTotals[normalizedMealType].calories += calories;
+            mealTypeTotals[normalizedMealType].protein += protein;
+            mealTypeTotals[normalizedMealType].carbs += carbs;
+            mealTypeTotals[normalizedMealType].fat += fat;
+          }
         });
       });
     });
 
-    setNutritionStats({
-      totalCalories,
-      averageCalories: totalMeals > 0 ? Math.round(totalCalories / totalMeals) : 0,
-      protein: Math.round(totalProtein / totalMeals),
-      carbs: Math.round(totalCarbs / totalMeals),
-      fat: Math.round(totalFat / totalMeals),
-      fiber: Math.round(totalFiber / totalMeals)
+    // Calculate weekly totals with null checks
+    const weeklyTotals = Object.values(dailyTotals).reduce((acc, day) => ({
+      calories: acc.calories + (day?.calories || 0),
+      protein: acc.protein + (day?.protein || 0),
+      carbs: acc.carbs + (day?.carbs || 0),
+      fat: acc.fat + (day?.fat || 0)
+    }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+
+    // Calculate daily averages with null checks
+    const numDays = Object.keys(dailyTotals).length || 1;
+    const dailyAverages = {
+      calories: Math.round(weeklyTotals.calories / numDays),
+      protein: Math.round(weeklyTotals.protein / numDays),
+      carbs: Math.round(weeklyTotals.carbs / numDays),
+      fat: Math.round(weeklyTotals.fat / numDays)
+    };
+
+    setNutritionData({
+      totalCalories: weeklyTotals.calories,
+      totalProtein: weeklyTotals.protein,
+      totalCarbs: weeklyTotals.carbs,
+      totalFat: weeklyTotals.fat,
+      dailyAverages,
+      mealTypeBreakdown: mealTypeTotals
     });
 
-    setMealTypeStats(mealTypeCounts);
+    setMealTypeStats(mealTypeTotals);
   };
 
-  const getProgressColor = (current, goal) => {
-    const percentage = (current / goal) * 100;
-    if (percentage >= 100) return 'bg-green-500';
-    if (percentage >= 80) return 'bg-yellow-500';
+  const getProgressColor = (value, goal) => {
+    const percentage = (value / goal) * 100;
+    if (percentage >= 90) return 'bg-green-500';
+    if (percentage >= 70) return 'bg-yellow-500';
     return 'bg-red-500';
   };
 
@@ -118,6 +189,11 @@ const WeeklyReport = () => {
     return colors[mealType] || '#6C757D';
   };
 
+  // Safely extract progress data with fallback values
+  const weight = currentWeek?.progress?.weight;
+  const bodyFat = currentWeek?.progress?.bodyFat;
+  const waterIntake = currentWeek?.progress?.waterIntake;
+
   return (
     <div className="weekly-report-page">
       <div className="page-background" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1490645930917-897ecb06fdf4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')" }} />
@@ -127,13 +203,13 @@ const WeeklyReport = () => {
         <div className="stats-grid">
           <div className="stats-card total-calories">
             <h3>Total Calories</h3>
-            <div className="stat-value">{nutritionStats.totalCalories}</div>
+            <div className="stat-value">{nutritionData.totalCalories}</div>
             <div className="stat-label">for the week</div>
           </div>
 
           <div className="stats-card average-calories">
             <h3>Average Calories</h3>
-            <div className="stat-value">{nutritionStats.averageCalories}</div>
+            <div className="stat-value">{nutritionData.dailyAverages.calories}</div>
             <div className="stat-label">per meal</div>
           </div>
         </div>
@@ -146,9 +222,9 @@ const WeeklyReport = () => {
               <div className="bar-container">
                 <div 
                   className="bar-fill protein"
-                  style={{ width: `${(nutritionStats.protein / 50) * 100}%` }}
+                  style={{ width: `${(nutritionData.dailyAverages.protein / 140) * 100}%` }}
                 >
-                  <span className="bar-value">{nutritionStats.protein}g</span>
+                  <span className="bar-value">{nutritionData.dailyAverages.protein}g</span>
                 </div>
               </div>
             </div>
@@ -157,9 +233,9 @@ const WeeklyReport = () => {
               <div className="bar-container">
                 <div 
                   className="bar-fill carbs"
-                  style={{ width: `${(nutritionStats.carbs / 100) * 100}%` }}
+                  style={{ width: `${(nutritionData.dailyAverages.carbs / 250) * 100}%` }}
                 >
-                  <span className="bar-value">{nutritionStats.carbs}g</span>
+                  <span className="bar-value">{nutritionData.dailyAverages.carbs}g</span>
                 </div>
               </div>
             </div>
@@ -168,20 +244,9 @@ const WeeklyReport = () => {
               <div className="bar-container">
                 <div 
                   className="bar-fill fat"
-                  style={{ width: `${(nutritionStats.fat / 30) * 100}%` }}
+                  style={{ width: `${(nutritionData.dailyAverages.fat / 65) * 100}%` }}
                 >
-                  <span className="bar-value">{nutritionStats.fat}g</span>
-                </div>
-              </div>
-            </div>
-            <div className="nutrition-bar">
-              <div className="bar-label">Fiber</div>
-              <div className="bar-container">
-                <div 
-                  className="bar-fill fiber"
-                  style={{ width: `${(nutritionStats.fiber / 25) * 100}%` }}
-                >
-                  <span className="bar-value">{nutritionStats.fiber}g</span>
+                  <span className="bar-value">{nutritionData.dailyAverages.fat}g</span>
                 </div>
               </div>
             </div>
@@ -191,18 +256,18 @@ const WeeklyReport = () => {
         <div className="meal-type-chart">
           <h3>Meals by Type</h3>
           <div className="meal-type-bars">
-            {Object.entries(mealTypeStats).map(([mealType, count]) => (
+            {Object.entries(mealTypeStats).map(([mealType, stats]) => (
               <div key={mealType} className="meal-type-bar">
                 <div className="bar-label">{mealType}</div>
                 <div className="bar-container">
                   <div 
                     className="bar-fill"
                     style={{ 
-                      width: `${(count / Math.max(...Object.values(mealTypeStats))) * 100}%`,
+                      width: `${(stats.calories / Math.max(...Object.values(mealTypeStats).map(s => s.calories))) * 100}%`,
                       backgroundColor: getMealTypeColor(mealType)
                     }}
                   >
-                    <span className="bar-value">{count} meals</span>
+                    <span className="bar-value">{stats.calories} calories</span>
                   </div>
                 </div>
               </div>
@@ -239,18 +304,18 @@ const WeeklyReport = () => {
                 <h2 className="text-lg font-semibold">Nutrition Summary</h2>
               </div>
               <div className="space-y-4">
-                {Object.entries(currentWeek.nutrition).map(([key, value]) => (
+                {Object.entries(nutritionData.dailyAverages).map(([key, value]) => (
                   <div key={key} className="space-y-2">
                     <div className="flex justify-between">
                       <span className="capitalize font-medium text-gray-700">{key}</span>
                       <span className="font-medium">
-                        {value.average} / {value.goal}
+                        {value}
                       </span>
                     </div>
                     <div className="w-full bg-gray-100 rounded-full h-2.5">
                       <div 
-                        className={`h-2.5 rounded-full ${getProgressColor(value.average, value.goal)}`}
-                        style={{ width: `${Math.min(100, (value.average / value.goal) * 100)}%` }}
+                        className={`h-2.5 rounded-full ${getProgressColor(value, nutritionData.dailyAverages[key])}`}
+                        style={{ width: `${Math.min(100, (value / nutritionData.dailyAverages[key]) * 100)}%` }}
                       ></div>
                     </div>
                   </div>
@@ -271,10 +336,12 @@ const WeeklyReport = () => {
                       <p className="text-gray-600">Weight</p>
                     </div>
                     <p className="text-lg font-medium">
-                      {currentWeek.progress.weight.end} kg
-                      <span className={`text-sm ml-2 ${currentWeek.progress.weight.end < currentWeek.progress.weight.start ? 'text-green-500' : 'text-red-500'}`}>
-                        ({currentWeek.progress.weight.end - currentWeek.progress.weight.start} kg)
-                      </span>
+                      {weight ? `${weight.end} kg` : 'N/A'}
+                      {weight && (
+                        <span className={`text-sm ml-2 ${weight.end < weight.start ? 'text-green-500' : 'text-red-500'}`}>
+                          ({weight.end - weight.start} kg)
+                        </span>
+                      )}
                     </p>
                   </div>
                   <div className="bg-gray-50 p-4 rounded-lg">
@@ -283,10 +350,12 @@ const WeeklyReport = () => {
                       <p className="text-gray-600">Body Fat</p>
                     </div>
                     <p className="text-lg font-medium">
-                      {currentWeek.progress.bodyFat.end}%
-                      <span className={`text-sm ml-2 ${currentWeek.progress.bodyFat.end < currentWeek.progress.bodyFat.start ? 'text-green-500' : 'text-red-500'}`}>
-                        ({currentWeek.progress.bodyFat.end - currentWeek.progress.bodyFat.start}%)
-                      </span>
+                      {bodyFat ? `${bodyFat.end}%` : 'N/A'}
+                      {bodyFat && (
+                        <span className={`text-sm ml-2 ${bodyFat.end < bodyFat.start ? 'text-green-500' : 'text-red-500'}`}>
+                          ({bodyFat.end - bodyFat.start}%)
+                        </span>
+                      )}
                     </p>
                   </div>
                 </div>
@@ -298,12 +367,12 @@ const WeeklyReport = () => {
                   <div className="flex items-center gap-2">
                     <div className="w-full bg-gray-100 rounded-full h-2.5">
                       <div 
-                        className={`h-2.5 rounded-full ${getProgressColor(currentWeek.progress.waterIntake.average, currentWeek.progress.waterIntake.goal)}`}
-                        style={{ width: `${(currentWeek.progress.waterIntake.average / currentWeek.progress.waterIntake.goal) * 100}%` }}
+                        className={`h-2.5 rounded-full ${getProgressColor(waterIntake?.average || 0, waterIntake?.goal || 1)}`}
+                        style={{ width: `${waterIntake ? (waterIntake.average / waterIntake.goal) * 100 : 0}%` }}
                       ></div>
                     </div>
                     <span className="text-sm font-medium">
-                      {currentWeek.progress.waterIntake.average}L / {currentWeek.progress.waterIntake.goal}L
+                      {waterIntake ? `${waterIntake.average}L / ${waterIntake.goal}L` : 'N/A'}
                     </span>
                   </div>
                 </div>
@@ -325,14 +394,20 @@ const WeeklyReport = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {currentWeek.meals.map((meal) => (
+                    {currentWeek?.meals?.map((meal) => (
                       <tr key={meal.day} className="border-b hover:bg-gray-50">
-                        <td className="py-3 font-medium">{meal.day}</td>
+                        <td className="py-3">{meal.day}</td>
                         <td className="py-3">{meal.breakfast}</td>
                         <td className="py-3">{meal.lunch}</td>
                         <td className="py-3">{meal.dinner}</td>
                       </tr>
-                    ))}
+                    )) || (
+                      <tr>
+                        <td colSpan="4" className="py-3 text-center text-gray-500">
+                          No meals planned for this week
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -342,7 +417,7 @@ const WeeklyReport = () => {
               <div className="card bg-green-50">
                 <h2 className="text-lg font-semibold mb-4 text-green-800">Achievements 🎉</h2>
                 <ul className="space-y-2">
-                  {currentWeek.achievements.map((achievement, index) => (
+                  {(currentWeek.achievements || []).map((achievement, index) => (
                     <li key={index} className="flex items-start gap-2">
                       <span className="text-green-500">✓</span>
                       <span className="text-gray-700">{achievement}</span>
@@ -353,7 +428,7 @@ const WeeklyReport = () => {
               <div className="card bg-yellow-50">
                 <h2 className="text-lg font-semibold mb-4 text-yellow-800">Areas for Improvement 💪</h2>
                 <ul className="space-y-2">
-                  {currentWeek.improvements.map((improvement, index) => (
+                  {(currentWeek.improvements || []).map((improvement, index) => (
                     <li key={index} className="flex items-start gap-2">
                       <span className="text-yellow-500">•</span>
                       <span className="text-gray-700">{improvement}</span>
