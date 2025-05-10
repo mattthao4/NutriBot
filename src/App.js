@@ -8,6 +8,12 @@ import WeeklyReport from './pages/WeeklyReport';
 import MealPlanner from './pages/MealPlanner';
 import Dashboard from './pages/Dashboard';
 import LoginPage from './pages/LoginPage';
+import OnboardingContainer from './pages/onboarding/OnboardingContainer';
+import OnboardingGoals from './pages/onboarding/OnboardingGoals';
+import OnboardingBody from './pages/onboarding/OnboardingBody';
+import OnboardingDiet from './pages/onboarding/OnboardingDiet';
+import OnboardingSchedule from './pages/onboarding/OnboardingSchedule';
+import OnboardingBudget from './pages/onboarding/OnboardingBudget';
 import './styles.css';
 
 // A simple check for authentication status (you can make this more robust)
@@ -36,6 +42,18 @@ function App() {
         <main className={`main-container ${!isAuthenticated() ? 'full-height' : ''}`}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            
+            {/* Onboarding Routes */}
+            <Route path="/onboarding" element={<OnboardingContainer />}>
+              {/* Index route for onboarding could be a welcome or the first step */}
+              <Route index element={<Navigate to="goals" replace />} /> 
+              <Route path="goals" element={<OnboardingGoals />} />
+              <Route path="body" element={<OnboardingBody />} />
+              <Route path="diet" element={<OnboardingDiet />} />
+              <Route path="schedule" element={<OnboardingSchedule />} />
+              <Route path="budget" element={<OnboardingBudget />} />
+            </Route>
+
             <Route 
               path="/"
               element={

@@ -1,0 +1,120 @@
+:root {
+  --onboarding-bg-color: #f0f7f6; /* Same as login for consistency */
+  --onboarding-card-bg: #ffffff;
+  --onboarding-primary-accent: #65c8c4; /* Teal accent */
+  --onboarding-text-primary: #333333;
+  --onboarding-text-secondary: #555555;
+  --onboarding-progress-bar-track: #e0e0e0;
+  --onboarding-progress-label-active: var(--onboarding-primary-accent);
+  --onboarding-progress-label-inactive: #aaaaaa;
+}
+
+.onboarding-container-page {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Align card to top, allow scrolling if content is long */
+  min-height: 100vh;
+  background-color: var(--onboarding-bg-color);
+  padding: 40px 20px; /* More padding at top */
+  box-sizing: border-box;
+  overflow-y: auto; /* Allow page to scroll if card is too tall */
+}
+
+.onboarding-card {
+  background-color: var(--onboarding-card-bg);
+  padding: 30px 40px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 700px; /* Wider card for onboarding content */
+  text-align: center;
+}
+
+.onboarding-header {
+  margin-bottom: 30px;
+}
+
+.onboarding-header h1 {
+  font-size: 2em;
+  color: var(--onboarding-text-primary);
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.onboarding-header p {
+  font-size: 1.1em;
+  color: var(--onboarding-text-secondary);
+  margin-bottom: 0;
+}
+
+.progress-bar-container {
+  margin-bottom: 30px;
+  width: 100%;
+}
+
+.progress-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.progress-label {
+  font-size: 0.9em;
+  color: var(--onboarding-progress-label-inactive);
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.progress-label.active {
+  color: var(--onboarding-progress-label-active);
+  font-weight: 600;
+}
+
+.progress-bar-track {
+  width: 100%;
+  height: 8px;
+  background-color: var(--onboarding-progress-bar-track);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: var(--onboarding-primary-accent);
+  border-radius: 4px;
+  transition: width 0.4s ease-out;
+}
+
+.onboarding-step-content {
+  /* Styles for the content area of each step can be added here if needed */
+  /* For now, individual step components will manage their own internal layout */
+  text-align: left; /* Reset text-align for step content if needed */
+}
+
+/* Basic responsiveness */
+@media (max-width: 768px) {
+  .onboarding-card {
+    padding: 25px 20px;
+  }
+  .onboarding-header h1 {
+    font-size: 1.8em;
+  }
+  .onboarding-header p {
+    font-size: 1em;
+  }
+  .progress-label {
+    font-size: 0.8em;
+  }
+}
+
+@media (max-width: 480px) {
+  .onboarding-container-page {
+    padding: 20px 10px;
+  }
+  .onboarding-card {
+    padding: 20px 15px;
+  }
+   .progress-bar-labels {
+    font-size: 0.7em; /* make labels smaller on very small screens */
+  }
+} 

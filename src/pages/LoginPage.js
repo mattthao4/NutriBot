@@ -28,11 +28,9 @@ const LoginPage = () => {
       const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding');
 
       if (!hasCompletedOnboarding) {
-        // For now, since onboarding pages aren't built, we'll mark it as complete
-        // and navigate to the dashboard. Later, this will navigate to the
-        // actual onboarding start page, and the flag will be set at the END of onboarding.
-        localStorage.setItem('hasCompletedOnboarding', 'true');
-        navigate('/dashboard');
+        // For first-time users, navigate to the start of the onboarding flow.
+        // The 'hasCompletedOnboarding' flag will be set at the END of the full onboarding process.
+        navigate('/onboarding/goals'); 
       } else {
         navigate('/dashboard');
       }
