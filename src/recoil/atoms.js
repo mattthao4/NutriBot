@@ -1,4 +1,4 @@
-import { atom, atomFamily } from 'recoil';
+import { atom } from 'recoil';
 
 // Helper function to get the current week's Monday date
 const getCurrentWeekMonday = () => {

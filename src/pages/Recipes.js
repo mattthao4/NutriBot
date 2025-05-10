@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilState } from 'recoil';
-import { mealPlanState, selectedMealSlotState, getMealPlanKey, formatDate } from '../recoil/atoms';
+import { mealPlanState, selectedMealSlotState } from '../recoil/atoms';
 import '../styles/theme.css';
 import './Recipes.css';
 

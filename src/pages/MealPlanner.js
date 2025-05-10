@@ -223,7 +223,7 @@ const MealPlanner = () => {
         }
       }
     }
-  }, [currentWeekStart]);
+  }, [currentWeekStart, setMealPlan]);
 
   return (
     <div className="meal-planner-page">
