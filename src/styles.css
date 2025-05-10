@@ -225,4 +225,10 @@ body {
   .grid-cols-3 {
     grid-template-columns: repeat(1, minmax(0, 1fr));
   }
+}
+
+.main-container.full-height {
+  height: 100vh; /* Or min-height, depending on your layout */
+  display: flex; /* Optional: if you want content to fill, e.g. LoginPage */
+  flex-direction: column; /* Optional */
 } 
