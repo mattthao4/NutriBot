@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilState } from 'recoil';
-import { mealPlanState, currentWeekState } from '../recoil/atoms';
+import { mealPlanState, currentWeekState, formatDate } from '../recoil/atoms';
 import '../styles/theme.css';
 import './ShoppingList.css';
 
@@ -11,17 +11,60 @@ const ShoppingList = () => {
   const [shoppingList, setShoppingList] = useState([]);
   const [checkedItems, setCheckedItems] = useState({});
   const [mealPlan] = useRecoilState(mealPlanState);
-  const [currentWeek] = useRecoilState(currentWeekState);
+  const [currentWeek, setCurrentWeek] = useRecoilState(currentWeekState);
+  const [viewMode, setViewMode] = useState('weekly'); // 'weekly' or 'daily'
+  const [selectedDay, setSelectedDay] = useState(null);
 
+  // Load checked items from localStorage on component mount
   useEffect(() => {
-    generateShoppingList(mealPlan);
-  }, [mealPlan]);
+    const savedCheckedItems = localStorage.getItem('checkedItems');
+    if (savedCheckedItems) {
+      setCheckedItems(JSON.parse(savedCheckedItems));
+    }
+  }, []);
+
+  // Save checked items to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('checkedItems', JSON.stringify(checkedItems));
+  }, [checkedItems]);
+
+  // Helper to get week dates at midnight (local)
+  const getWeekDates = () => {
+    const dates = [];
+    const currentDate = new Date(currentWeek);
+    currentDate.setHours(0, 0, 0, 0);
+    for (let i = 0; i < 7; i++) {
+      dates.push(new Date(currentDate));
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    return dates;
+  };
+
+  // Get the start and end dates of the current week
+  const weekDates = getWeekDates();
+  const weekStart = weekDates[0];
+  const weekEnd = weekDates[6];
+
+  const handlePreviousWeek = () => {
+    const newWeekStart = new Date(weekStart);
+    newWeekStart.setDate(newWeekStart.getDate() - 7);
+    setCurrentWeek(newWeekStart);
+  };
+
+  const handleNextWeek = () => {
+    const newWeekStart = new Date(weekStart);
+    newWeekStart.setDate(newWeekStart.getDate() + 7);
+    setCurrentWeek(newWeekStart);
+  };
 
   const generateShoppingList = (plan) => {
     const ingredients = new Map();
     
     // Process all meals in the plan
     Object.entries(plan).forEach(([day, meals]) => {
+      // Skip if we're in daily view and this isn't the selected day
+      if (viewMode === 'daily' && selectedDay && day !== selectedDay) return;
+
       Object.entries(meals).forEach(([mealType, recipes]) => {
         recipes.forEach(recipe => {
           if (recipe.ingredients) {
@@ -53,63 +96,30 @@ const ShoppingList = () => {
   };
 
   useEffect(() => {
-    // Load checked items
-    const loadCheckedItems = () => {
-      try {
-        const checkedItemsStr = sessionStorage.getItem('checkedItems');
-        if (checkedItemsStr) {
-          const savedCheckedItems = JSON.parse(checkedItemsStr);
-          setCheckedItems(savedCheckedItems);
-        }
-      } catch (error) {
-        console.error('Error loading checked items:', error);
-      }
-    };
+    generateShoppingList(mealPlan);
+  }, [mealPlan, viewMode, selectedDay]);
 
-    // Initial load
-    loadCheckedItems();
+  const handleCheckItem = (itemName) => {
+    setCheckedItems(prev => {
+      const newCheckedItems = {
+        ...prev,
+        [itemName]: !prev[itemName]
+      };
+      return newCheckedItems;
+    });
+  };
 
-    // Set up storage event listener
-    const handleStorageChange = (e) => {
-      if (e.key === 'mealPlan-' + currentWeek) {
-        generateShoppingList(mealPlan);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [mealPlan, currentWeek]);
-
-  const handleCheckItem = (category, itemName) => {
-    const newCheckedItems = {
-      ...checkedItems,
-      [`${category}-${itemName}`]: !checkedItems[`${category}-${itemName}`]
-    };
-    
-    setCheckedItems(newCheckedItems);
-    sessionStorage.setItem('checkedItems', JSON.stringify(newCheckedItems));
+  const handleClearChecked = () => {
+    setCheckedItems({});
   };
 
   const handleRemoveItem = (category, itemName) => {
-    const newShoppingList = { ...shoppingList };
-    newShoppingList[category] = newShoppingList[category].filter(
-      item => item.name !== itemName
-    );
-    
-    if (newShoppingList[category].length === 0) {
-      delete newShoppingList[category];
-    }
-    
-    setShoppingList(newShoppingList);
+    setShoppingList(prevList => prevList.filter(item => item.name !== itemName));
   };
 
   const handleClearAll = () => {
     setShoppingList({});
     setCheckedItems({});
-    sessionStorage.removeItem('checkedItems');
   };
 
   const getCategoryColor = (category) => {
@@ -129,18 +139,68 @@ const ShoppingList = () => {
       <div className="page-background" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1490818387583-1baba5e638af?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')" }} />
       <div className="page-content-wrapper">
         <div className="page-header">
-          <h1>Shopping List</h1>
+          <div>
+            <div className="title-section">
+              <h1>Shopping List</h1>
+              <span className="total-items">
+                {shoppingList.length} {shoppingList.length === 1 ? 'item' : 'items'}
+              </span>
+            </div>
+            <div className="view-controls">
+              <div className="date-navigation">
+                <button className="nav-button" onClick={handlePreviousWeek}>
+                  <ChevronLeftIcon className="w-5 h-5" />
+                </button>
+                <span className="date-range">
+                  {formatDate(weekStart)} - {formatDate(weekEnd)}
+                </span>
+                <button className="nav-button" onClick={handleNextWeek}>
+                  <ChevronRightIcon className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="view-mode-toggle">
+                <button 
+                  className={`view-mode-button ${viewMode === 'weekly' ? 'active' : ''}`}
+                  onClick={() => {
+                    setViewMode('weekly');
+                    setSelectedDay(null);
+                  }}
+                >
+                  Weekly View
+                </button>
+                <button 
+                  className={`view-mode-button ${viewMode === 'daily' ? 'active' : ''}`}
+                  onClick={() => setViewMode('daily')}
+                >
+                  Daily View
+                </button>
+              </div>
+            </div>
+            {viewMode === 'daily' && (
+              <div className="day-selector">
+                {weekDates.map((date, index) => (
+                  <button
+                    key={index}
+                    className={`day-button ${selectedDay === ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][index] ? 'active' : ''}`}
+                    onClick={() => setSelectedDay(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][index])}
+                  >
+                    {formatDate(date)}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="page-actions">
             <button className="button button-success">
               <span className="icon">💾</span>
               Save List
             </button>
             <button 
-              className="button button-danger"
-              onClick={handleClearAll}
+              className="button button-secondary"
+              onClick={handleClearChecked}
             >
-              <span className="icon">🗑️</span>
-              Clear All
+              <span className="icon">✓</span>
+              Clear Checked
             </button>
           </div>
         </div>
@@ -152,12 +212,12 @@ const ShoppingList = () => {
         ) : (
           <div className="shopping-list-grid">
             {shoppingList.map((item, index) => (
-              <div key={index} className="shopping-item">
+              <div key={index} className={`shopping-item ${checkedItems[item.name] ? 'checked' : ''}`}>
                 <input
                   type="checkbox"
                   className="item-checkbox"
                   checked={checkedItems[item.name] || false}
-                  onChange={() => handleCheckItem('default', item.name)}
+                  onChange={() => handleCheckItem(item.name)}
                 />
                 <div className="item-details">
                   <h4 className="item-name">{item.name}</h4>

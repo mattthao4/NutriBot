@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilState } from 'recoil';
-import { mealPlanState, currentWeekState } from '../recoil/atoms';
+import { mealPlanState, currentWeekState, formatDate } from '../recoil/atoms';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Pie } from 'react-chartjs-2';
 import '../styles/theme.css';
 import './WeeklyReport.css';
 import { CalendarIcon, ChartBarIcon, ArrowTrendingUpIcon, FireIcon, ScaleIcon, BeakerIcon } from '@heroicons/react/24/outline';
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const WeeklyReport = () => {
   const navigate = useNavigate();
@@ -194,11 +198,54 @@ const WeeklyReport = () => {
   const bodyFat = currentWeek?.progress?.bodyFat;
   const waterIntake = currentWeek?.progress?.waterIntake;
 
+  const getChartData = (data) => ({
+    labels: ['Protein', 'Carbs', 'Fat'],
+    datasets: [{
+      data: [data.protein, data.carbs, data.fat],
+      backgroundColor: [
+        'rgba(255, 107, 107, 0.8)',  // Protein - Red
+        'rgba(78, 205, 196, 0.8)',   // Carbs - Teal
+        'rgba(255, 209, 102, 0.8)',  // Fat - Yellow
+      ],
+      borderColor: [
+        'rgba(255, 107, 107, 1)',
+        'rgba(78, 205, 196, 1)',
+        'rgba(255, 209, 102, 1)',
+      ],
+      borderWidth: 1,
+    }],
+  });
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'bottom',
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const label = context.label || '';
+            const value = context.raw || 0;
+            return `${label}: ${value}g`;
+          }
+        }
+      }
+    }
+  };
+
   return (
     <div className="weekly-report-page">
       <div className="page-background" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1490645930917-897ecb06fdf4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')" }} />
       <div className="page-content-wrapper">
-        <h1>Weekly Report</h1>
+        <div className="page-header">
+          <div className="title-section">
+            <h1>Weekly Report</h1>
+            <div className="date-range">
+              {formatDate(new Date(currentWeek))} - {formatDate(new Date(new Date(currentWeek).setDate(new Date(currentWeek).getDate() + 6)))}
+            </div>
+          </div>
+        </div>
 
         <div className="stats-grid">
           <div className="stats-card total-calories">
@@ -211,6 +258,50 @@ const WeeklyReport = () => {
             <h3>Average Calories</h3>
             <div className="stat-value">{nutritionData.dailyAverages.calories}</div>
             <div className="stat-label">per meal</div>
+          </div>
+        </div>
+
+        <div className="macro-charts">
+          <div className="chart-container">
+            <h3>Weekly Macro Breakdown</h3>
+            <Pie data={getChartData(nutritionData.dailyAverages)} options={chartOptions} />
+          </div>
+          <div className="chart-container">
+            <h3>Meal Type Distribution</h3>
+            <Pie 
+              data={{
+                labels: Object.keys(mealTypeStats),
+                datasets: [{
+                  data: Object.values(mealTypeStats).map(stats => stats.calories),
+                  backgroundColor: [
+                    'rgba(255, 107, 107, 0.8)',  // Breakfast
+                    'rgba(78, 205, 196, 0.8)',   // Lunch
+                    'rgba(255, 209, 102, 0.8)',  // Dinner
+                  ],
+                  borderColor: [
+                    'rgba(255, 107, 107, 1)',
+                    'rgba(78, 205, 196, 1)',
+                    'rgba(255, 209, 102, 1)',
+                  ],
+                  borderWidth: 1,
+                }],
+              }}
+              options={{
+                ...chartOptions,
+                plugins: {
+                  ...chartOptions.plugins,
+                  tooltip: {
+                    callbacks: {
+                      label: function(context) {
+                        const label = context.label || '';
+                        const value = context.raw || 0;
+                        return `${label}: ${value} calories`;
+                      }
+                    }
+                  }
+                }
+              }}
+            />
           </div>
         </div>
 
