@@ -135,107 +135,97 @@ const ShoppingList = () => {
   };
 
   return (
-    <div className="shopping-list-page">
-      <div className="page-background" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1490818387583-1baba5e638af?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')" }} />
-      <div className="page-content-wrapper">
-        <div className="page-header">
-          <div>
-            <div className="title-section">
-              <h1>Shopping List</h1>
-              <span className="total-items">
-                {shoppingList.length} {shoppingList.length === 1 ? 'item' : 'items'}
-              </span>
-            </div>
-            <div className="view-controls">
-              <div className="date-navigation">
-                <button className="nav-button" onClick={handlePreviousWeek}>
-                  <ChevronLeftIcon className="w-5 h-5" />
-                </button>
-                <span className="date-range">
-                  {formatDate(weekStart)} - {formatDate(weekEnd)}
-                </span>
-                <button className="nav-button" onClick={handleNextWeek}>
-                  <ChevronRightIcon className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="view-mode-toggle">
-                <button 
-                  className={`view-mode-button ${viewMode === 'weekly' ? 'active' : ''}`}
-                  onClick={() => {
-                    setViewMode('weekly');
-                    setSelectedDay(null);
-                  }}
-                >
-                  Weekly View
-                </button>
-                <button 
-                  className={`view-mode-button ${viewMode === 'daily' ? 'active' : ''}`}
-                  onClick={() => setViewMode('daily')}
-                >
-                  Daily View
-                </button>
-              </div>
-            </div>
-            {viewMode === 'daily' && (
-              <div className="day-selector">
-                {weekDates.map((date, index) => (
-                  <button
-                    key={index}
-                    className={`day-button ${selectedDay === ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][index] ? 'active' : ''}`}
-                    onClick={() => setSelectedDay(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][index])}
+    <div className="shopping-list-container">
+      <div className="page-header">
+        <div className="title-section">
+          <h1>Shopping List</h1>
+          <span className="total-items">
+            {shoppingList.length} {shoppingList.length === 1 ? 'item' : 'items'}
+          </span>
+        </div>
+        <div className="week-navigation">
+          <button onClick={handlePreviousWeek} className="nav-button">
+            ←
+          </button>
+          <span className="week-range">
+            {formatDate(weekStart)} - {formatDate(weekEnd)}
+          </span>
+          <button onClick={handleNextWeek} className="nav-button">
+            →
+          </button>
+        </div>
+        <div className="view-toggle">
+          <button 
+            className={`toggle-button ${viewMode === 'weekly' ? 'active' : ''}`}
+            onClick={() => setViewMode('weekly')}
+          >
+            Weekly
+          </button>
+          <button 
+            className={`toggle-button ${viewMode === 'daily' ? 'active' : ''}`}
+            onClick={() => setViewMode('daily')}
+          >
+            Daily
+          </button>
+        </div>
+      </div>
+
+      <div className="shopping-list-grid">
+        <div className="shopping-list-column">
+          <h2>To Buy</h2>
+          <div className="shopping-list">
+            {shoppingList
+              .filter(item => !checkedItems[item.name])
+              .map((item, index) => (
+                <div key={index} className="shopping-item">
+                  <div className="item-content">
+                    <input
+                      type="checkbox"
+                      checked={checkedItems[item.name] || false}
+                      onChange={() => handleCheckItem(item.name)}
+                      className="item-checkbox"
+                    />
+                    <span className="item-name">{item.name}</span>
+                    <span className="item-quantity">{item.quantity}</span>
+                  </div>
+                  <button 
+                    onClick={() => handleRemoveItem('default', item.name)}
+                    className="remove-button"
                   >
-                    {formatDate(date)}
+                    ×
                   </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="page-actions">
-            <button className="button button-success">
-              <span className="icon">💾</span>
-              Save List
-            </button>
-            <button 
-              className="button button-secondary"
-              onClick={handleClearChecked}
-            >
-              <span className="icon">✓</span>
-              Clear Checked
-            </button>
+                </div>
+              ))}
           </div>
         </div>
-        
-        {shoppingList.length === 0 ? (
-          <div className="empty-state">
-            <p>Your shopping list is empty. Add meals to your meal planner to see ingredients here.</p>
-          </div>
-        ) : (
-          <div className="shopping-list-grid">
-            {shoppingList.map((item, index) => (
-              <div key={index} className={`shopping-item ${checkedItems[item.name] ? 'checked' : ''}`}>
-                <input
-                  type="checkbox"
-                  className="item-checkbox"
-                  checked={checkedItems[item.name] || false}
-                  onChange={() => handleCheckItem(item.name)}
-                />
-                <div className="item-details">
-                  <h4 className="item-name">{item.name}</h4>
-                  <div className="item-quantity">
-                    {item.quantity} {item.unit}
+
+        <div className="shopping-list-column">
+          <h2>Done</h2>
+          <div className="shopping-list done-list">
+            {shoppingList
+              .filter(item => checkedItems[item.name])
+              .map((item, index) => (
+                <div key={index} className="shopping-item done-item">
+                  <div className="item-content">
+                    <input
+                      type="checkbox"
+                      checked={checkedItems[item.name] || false}
+                      onChange={() => handleCheckItem(item.name)}
+                      className="item-checkbox"
+                    />
+                    <span className="item-name">{item.name}</span>
+                    <span className="item-quantity">{item.quantity}</span>
                   </div>
+                  <button 
+                    onClick={() => handleRemoveItem('default', item.name)}
+                    className="remove-button"
+                  >
+                    ×
+                  </button>
                 </div>
-                <button
-                  className="remove-item-button"
-                  onClick={() => handleRemoveItem('default', item.name)}
-                  aria-label="Remove item"
-                >
-                  <XMarkIcon className="w-5 h-5" />
-                </button>
-              </div>
-            ))}
+              ))}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
