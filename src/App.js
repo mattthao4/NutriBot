@@ -39,7 +39,7 @@ function App() {
         {/* For simplicity, we might need a more sophisticated way to hide Header on LoginPage */}
         {/* This basic check will hide it if not authenticated, which covers LoginPage */}
         {isAuthenticated() && <Header />}
-        <main className={`main-container ${!isAuthenticated() ? 'full-height' : ''}`}>
+        <main className={`main-container ${!isAuthenticated() ? 'full-height' : 'with-header'}`}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             

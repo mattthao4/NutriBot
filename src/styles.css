@@ -228,7 +228,12 @@ body {
 }
 
 .main-container.full-height {
-  height: 100vh; /* Or min-height, depending on your layout */
-  display: flex; /* Optional: if you want content to fill, e.g. LoginPage */
-  flex-direction: column; /* Optional */
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-container.with-header {
+  padding-top: 4rem; /* Height of the header */
+  min-height: calc(100vh - 4rem);
 } 
