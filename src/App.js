@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { RecoilRoot } from 'recoil';
 import Header from './components/layout/Header';
 import Recipes from './pages/Recipes';
+import RecipeDetails from './pages/RecipeDetails';
 import ShoppingList from './pages/ShoppingList';
 import WeeklyReport from './pages/WeeklyReport';
 import MealPlanner from './pages/MealPlanner';
@@ -84,6 +85,7 @@ function App() {
                 <ProtectedRoute>
                   <Recipes />
                 </ProtectedRoute>
+              <Route path="/recipe-details/:recipeId" element={<RecipeDetails />} />
               } 
             />
             <Route 
