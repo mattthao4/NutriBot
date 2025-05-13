@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useRecoilState } from 'recoil';
 import { mealPlanState, currentWeekState, formatDate } from '../recoil/atoms';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
@@ -11,7 +10,6 @@ import { CalendarIcon, ChartBarIcon, ArrowTrendingUpIcon, FireIcon, ScaleIcon, B
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const WeeklyReport = () => {
-  const navigate = useNavigate();
   const [selectedWeek, setSelectedWeek] = useState(0);
   const [mealPlan] = useRecoilState(mealPlanState);
   const [currentWeek, setCurrentWeek] = useRecoilState(currentWeekState);
@@ -20,7 +18,12 @@ const WeeklyReport = () => {
     totalProtein: 0,
     totalCarbs: 0,
     totalFat: 0,
-    dailyAverages: {},
+    dailyAverages: {
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0
+    },
     mealTypeBreakdown: {}
   });
   const [mealTypeStats, setMealTypeStats] = useState({});
@@ -67,10 +70,10 @@ const WeeklyReport = () => {
   useEffect(() => {
     if (!currentWeek) {
       const defaultWeek = {
-        meals: [],
+        startDate: new Date().toISOString(),
         progress: {
-          weight: { start: 0, end: 0 },
-          bodyFat: { start: 0, end: 0 },
+          weight: { current: 0, goal: 0 },
+          bodyFat: { current: 0, goal: 0 },
           waterIntake: { average: 0, goal: 0 }
         },
         achievements: [],
@@ -78,7 +81,7 @@ const WeeklyReport = () => {
       };
       setCurrentWeek(defaultWeek);
     }
-  }, [currentWeek]);
+  }, [currentWeek, setCurrentWeek]);
 
   useEffect(() => {
     calculateNutritionData(mealPlan);

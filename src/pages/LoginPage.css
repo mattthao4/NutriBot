@@ -1,0 +1,116 @@
+:root {
+  --login-background-color: #f0f7f6; /* Light greenish-blue, similar to onboarding bg */
+  --login-card-background: #ffffff;
+  --login-primary-accent: #65c8c4; /* Teal accent from onboarding */
+  --login-text-primary: #333333;
+  --login-text-secondary: #555555;
+  --login-input-border: #cccccc;
+  --login-input-focus-border: var(--login-primary-accent);
+  --login-button-hover: #50b0ac;
+  --login-error-text: #d9534f; /* A standard error red */
+}
+
+.login-page-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: var(--login-background-color);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.login-form-card {
+  background-color: var(--login-card-background);
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.login-logo {
+  width: 60px; /* Adjust as needed */
+  height: auto;
+  margin-bottom: 20px;
+}
+
+.login-header h2 {
+  font-size: 1.8em;
+  color: var(--login-text-primary);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.login-header p {
+  font-size: 1em;
+  color: var(--login-text-secondary);
+  margin-bottom: 30px;
+}
+
+.login-form .form-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.login-form label {
+  display: block;
+  font-size: 0.9em;
+  color: var(--login-text-secondary);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.login-form input[type="text"],
+.login-form input[type="password"] {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid var(--login-input-border);
+  border-radius: 8px;
+  font-size: 1em;
+  box-sizing: border-box;
+  transition: border-color 0.3s ease;
+}
+
+.login-form input[type="text"]:focus,
+.login-form input[type="password"]:focus {
+  border-color: var(--login-input-focus-border);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(101, 200, 196, 0.2); /* Subtle glow */
+}
+
+.login-button {
+  width: 100%;
+  padding: 12px 15px;
+  background-color: var(--login-primary-accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 10px;
+}
+
+.login-button:hover {
+  background-color: var(--login-button-hover);
+}
+
+.error-message {
+  color: var(--login-error-text);
+  font-size: 0.9em;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+/* Basic responsiveness */
+@media (max-width: 480px) {
+  .login-form-card {
+    padding: 30px;
+  }
+  .login-header h2 {
+    font-size: 1.6em;
+  }
+} 

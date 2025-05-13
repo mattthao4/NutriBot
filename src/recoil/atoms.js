@@ -1,4 +1,4 @@
-import { atom, atomFamily } from 'recoil';
+import { atom } from 'recoil';
 
 // Helper function to get the current week's Monday date
 const getCurrentWeekMonday = () => {
@@ -50,6 +50,27 @@ export const mealPlanState = atom({
 export const selectedMealSlotState = atom({
   key: 'selectedMealSlotState',
   default: null,
+});
+
+// Atom for storing user's onboarding preferences
+export const onboardingStateAtom = atom({
+  key: 'onboardingStateAtom',
+  default: {
+    goal: null, // e.g., 'weightLoss', 'muscleGain', 'maintenance', 'generalHealth'
+    age: null,
+    gender: null,
+    height: null, // cm
+    weight: null, // kg
+    activityLevel: null, // e.g., 'sedentary', 'light', 'moderate', 'veryActive'
+    dietType: null, // e.g., 'noRestrictions', 'vegetarian', 'vegan', 'keto', 'paleo'
+    allergies: [], // e.g., ['gluten', 'nuts']
+    mealsPerDay: null, // e.g., 2, 3, 4
+    mealPrepFrequency: null, // e.g., 'weekly', 'sometimes', 'never'
+    cookingTimePerDay: null, // e.g., 15, 30, 45, 60 ('min')
+    weeklyGroceryBudget: null, // e.g., 25, 75, 125, 200
+    budgetPriority: null, // e.g., 'costFocused', 'balanced', 'qualityFocused'
+  },
+  // Optional: Add effects for localStorage persistence if needed for the whole onboarding object
 });
 
 // Helper function to get meal plan key

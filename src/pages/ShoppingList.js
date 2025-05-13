@@ -7,7 +7,6 @@ import '../styles/theme.css';
 import './ShoppingList.css';
 
 const ShoppingList = () => {
-  const navigate = useNavigate();
   const [shoppingList, setShoppingList] = useState([]);
   const [checkedItems, setCheckedItems] = useState({});
   const [mealPlan] = useRecoilState(mealPlanState);

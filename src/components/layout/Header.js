@@ -1,11 +1,12 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { QuestionMarkCircleIcon, ArrowLeftOnRectangleIcon } from '@heroicons/react/24/outline';
 import '../../styles/theme.css';
 import './Header.css';
 
 const Header = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const navigation = [
     { name: 'Dashboard', href: '/' },
@@ -13,6 +14,11 @@ const Header = () => {
     { name: 'Shopping List', href: '/shopping-list' },
     { name: 'Weekly Report', href: '/weekly-report' }
   ];
+
+  const handleLogout = () => {
+    localStorage.removeItem('hasCompletedOnboarding');
+    navigate('/login');
+  };
 
   return (
     <header className="header">
@@ -36,9 +42,15 @@ const Header = () => {
             ))}
           </ul>
         </nav>
-        <button className="btn" aria-label="Help">
-          <QuestionMarkCircleIcon className="icon" />
-        </button>
+        <div className="header-actions">
+          <button className="btn btn-icon" aria-label="Help">
+            <QuestionMarkCircleIcon className="icon" />
+          </button>
+          <button onClick={handleLogout} className="btn btn-icon btn-logout" aria-label="Logout">
+            <ArrowLeftOnRectangleIcon className="icon" />
+            <span className="logout-text">Logout</span>
+          </button>
+        </div>
       </div>
     </header>
   );
