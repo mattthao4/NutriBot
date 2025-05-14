@@ -51,6 +51,34 @@ const Recipes = () => {
   const cookTimes = ['all', 'quick', 'medium', 'long'];
   const calorieRanges = ['all', 'low', 'medium', 'high'];
 
+  // Helper: check if recipe is recommended for user
+  const isRecipeRecommended = (recipe) => {
+    if (!onboardingData) return false;
+    // 1. Diet type must match (unless 'noRestrictions')
+    if (onboardingData.dietType && onboardingData.dietType !== 'noRestrictions') {
+      if (recipe.diet !== onboardingData.dietType) return false;
+    }
+    // 2. Exclude if any allergen is present
+    if (onboardingData.allergies && onboardingData.allergies.length > 0) {
+      const recipeIngredients = recipe.ingredients.map(ing => (typeof ing === 'string' ? ing.toLowerCase() : ing.name.toLowerCase()));
+      const hasAllergen = onboardingData.allergies.some(allergy => recipeIngredients.includes(allergy.toLowerCase()));
+      if (hasAllergen) return false;
+    }
+    // 3. Cooking time must be at most user's preference (if set)
+    if (onboardingData.cookingTimePerDay && recipe.prepTime) {
+      // Assume recipe.prepTime is a string like '30 min' or '1 hr'
+      let recipeMinutes = 0;
+      if (typeof recipe.prepTime === 'string') {
+        const match = recipe.prepTime.match(/(\d+)\s*min/);
+        if (match) recipeMinutes = parseInt(match[1], 10);
+        else if (/1\s*hr/.test(recipe.prepTime)) recipeMinutes = 60;
+        else if (/2\s*hr/.test(recipe.prepTime)) recipeMinutes = 120;
+      }
+      if (recipeMinutes > onboardingData.cookingTimePerDay) return false;
+    }
+    return true;
+  };
+
   const handleRecipeSelect = (recipe) => {
     if (selectedMealSlot) {
       try {
@@ -101,14 +129,23 @@ const Recipes = () => {
     }
   };
 
-  const filteredRecipes = recipes.filter(recipe => {
-    const matchesSearch = recipe.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesDiet = selectedDiet === 'all' || recipe.diet === selectedDiet;
-    const matchesTime = selectedTime === 'all' || recipe.timeCategory === selectedTime;
-    const matchesCalories = selectedCalories === 'all' || recipe.calorieCategory === selectedCalories;
-    
-    return matchesSearch && matchesDiet && matchesTime && matchesCalories;
-  });
+  const filteredRecipes = recipes
+    .filter(recipe => {
+      const matchesSearch = recipe.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesDiet = selectedDiet === 'all' || recipe.diet === selectedDiet;
+      const matchesTime = selectedTime === 'all' || recipe.timeCategory === selectedTime;
+      const matchesCalories = selectedCalories === 'all' || recipe.calorieCategory === selectedCalories;
+      
+      return matchesSearch && matchesDiet && matchesTime && matchesCalories;
+    })
+    .sort((a, b) => {
+      // Sort recommended recipes to the top
+      const aRecommended = isRecipeRecommended(a);
+      const bRecommended = isRecipeRecommended(b);
+      if (aRecommended && !bRecommended) return -1;
+      if (!aRecommended && bRecommended) return 1;
+      return 0;
+    });
 
   const formatMealSlotInfo = (mealSlot) => {
     if (!mealSlot) return '';
@@ -158,34 +195,6 @@ const Recipes = () => {
       });
     });
     return total;
-  };
-
-  // Helper: check if recipe is recommended for user
-  const isRecipeRecommended = (recipe) => {
-    if (!onboardingData) return false;
-    // 1. Diet type must match (unless 'noRestrictions')
-    if (onboardingData.dietType && onboardingData.dietType !== 'noRestrictions') {
-      if (recipe.diet !== onboardingData.dietType) return false;
-    }
-    // 2. Exclude if any allergen is present
-    if (onboardingData.allergies && onboardingData.allergies.length > 0) {
-      const recipeIngredients = recipe.ingredients.map(ing => (typeof ing === 'string' ? ing.toLowerCase() : ing.name.toLowerCase()));
-      const hasAllergen = onboardingData.allergies.some(allergy => recipeIngredients.includes(allergy.toLowerCase()));
-      if (hasAllergen) return false;
-    }
-    // 3. Cooking time must be at most user's preference (if set)
-    if (onboardingData.cookingTimePerDay && recipe.prepTime) {
-      // Assume recipe.prepTime is a string like '30 min' or '1 hr'
-      let recipeMinutes = 0;
-      if (typeof recipe.prepTime === 'string') {
-        const match = recipe.prepTime.match(/(\d+)\s*min/);
-        if (match) recipeMinutes = parseInt(match[1], 10);
-        else if (/1\s*hr/.test(recipe.prepTime)) recipeMinutes = 60;
-        else if (/2\s*hr/.test(recipe.prepTime)) recipeMinutes = 120;
-      }
-      if (recipeMinutes > onboardingData.cookingTimePerDay) return false;
-    }
-    return true;
   };
 
   const handleEditPreferences = () => {
