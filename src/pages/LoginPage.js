@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../AuthContext';
 import './LoginPage.css'; // We will create this file next
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -22,9 +24,7 @@ const LoginPage = () => {
     const hardcodedPassword = 'password123';
 
     if (username === hardcodedUsername && password === hardcodedPassword) {
-      // Simulate successful login
-      console.log('Login successful');
-
+      login(); // This will update context and trigger re-render
       const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding');
 
       if (!hasCompletedOnboarding) {

@@ -258,4 +258,8 @@ body {
   overflow-x: auto;
 }
 
-/* Removed .meal-planner-grid and .enhanced-meal-planner-grid rules. Use MealPlanner.css for these styles. */ 
+/* Removed .meal-planner-grid and .enhanced-meal-planner-grid rules. Use MealPlanner.css for these styles. */
+
+body.login-page-bg, .main-container.full-height.login-page-bg {
+  background-color: #f0f7f6 !important;
+} 

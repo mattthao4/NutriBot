@@ -1,10 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useRecoilState } from 'recoil';
-import { mealPlanState, selectedMealSlotState } from '../recoil/atoms';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { mealPlanState, selectedMealSlotState, onboardingStateAtom, onboardingRedirectAtom } from '../recoil/atoms';
 import '../styles/theme.css';
 import './Recipes.css';
 import recipes from '../data/recipes';
+import { PencilSquareIcon } from '@heroicons/react/24/outline';
+
+const DIET_TYPE_LABELS = {
+  noRestrictions: 'No Restrictions',
+  vegetarian: 'Vegetarian',
+  vegan: 'Vegan',
+  keto: 'Keto',
+  paleo: 'Paleo',
+};
+const BUDGET_PRIORITY_LABELS = {
+  costFocused: 'Cost-Focused',
+  balanced: 'Balanced',
+  qualityFocused: 'Quality-Focused',
+};
+const MEAL_PREP_LABELS = {
+  weekly: 'Weekly',
+  sometimes: 'Sometimes',
+  never: 'Never',
+};
 
 const Recipes = () => {
   const navigate = useNavigate();
@@ -14,6 +33,8 @@ const Recipes = () => {
   const [selectedCalories, setSelectedCalories] = useState('all');
   const [selectedMealSlot, setSelectedMealSlot] = useRecoilState(selectedMealSlotState);
   const [mealPlan, setMealPlan] = useRecoilState(mealPlanState);
+  const onboardingData = useRecoilValue(onboardingStateAtom);
+  const [onboardingRedirect, setOnboardingRedirect] = useRecoilState(onboardingRedirectAtom);
 
   useEffect(() => {
     // Get the meal slot from localStorage
@@ -139,10 +160,61 @@ const Recipes = () => {
     return total;
   };
 
+  // Helper: check if recipe is recommended for user
+  const isRecipeRecommended = (recipe) => {
+    if (!onboardingData) return false;
+    // 1. Diet type must match (unless 'noRestrictions')
+    if (onboardingData.dietType && onboardingData.dietType !== 'noRestrictions') {
+      if (recipe.diet !== onboardingData.dietType) return false;
+    }
+    // 2. Exclude if any allergen is present
+    if (onboardingData.allergies && onboardingData.allergies.length > 0) {
+      const recipeIngredients = recipe.ingredients.map(ing => (typeof ing === 'string' ? ing.toLowerCase() : ing.name.toLowerCase()));
+      const hasAllergen = onboardingData.allergies.some(allergy => recipeIngredients.includes(allergy.toLowerCase()));
+      if (hasAllergen) return false;
+    }
+    // 3. Cooking time must be at most user's preference (if set)
+    if (onboardingData.cookingTimePerDay && recipe.prepTime) {
+      // Assume recipe.prepTime is a string like '30 min' or '1 hr'
+      let recipeMinutes = 0;
+      if (typeof recipe.prepTime === 'string') {
+        const match = recipe.prepTime.match(/(\d+)\s*min/);
+        if (match) recipeMinutes = parseInt(match[1], 10);
+        else if (/1\s*hr/.test(recipe.prepTime)) recipeMinutes = 60;
+        else if (/2\s*hr/.test(recipe.prepTime)) recipeMinutes = 120;
+      }
+      if (recipeMinutes > onboardingData.cookingTimePerDay) return false;
+    }
+    return true;
+  };
+
+  const handleEditPreferences = () => {
+    setOnboardingRedirect({ type: 'recipes' });
+    navigate('/onboarding/goals');
+  };
+
   return (
     <div className="recipes-page">
       <div className="page-background" />
       <div className="recipes-content-wrapper">
+        {/* User Preferences Floating Box */}
+        <div className="user-preferences-card user-preferences-float">
+          <div className="preferences-header-row">
+            <h3>Your Preferences</h3>
+            <button className="edit-preferences-btn" onClick={handleEditPreferences} title="Edit Preferences">
+              <PencilSquareIcon className="edit-icon" />
+            </button>
+          </div>
+          <div className="user-preferences-list">
+            <div><strong>Diet Type:</strong> {DIET_TYPE_LABELS[onboardingData.dietType] || 'Not specified'}</div>
+            <div><strong>Allergies:</strong> {onboardingData.allergies && onboardingData.allergies.length > 0 ? onboardingData.allergies.join(', ') : 'None'}</div>
+            <div><strong>Meals per Day:</strong> {onboardingData.mealsPerDay || 'Not specified'}</div>
+            <div><strong>Meal Prep Frequency:</strong> {MEAL_PREP_LABELS[onboardingData.mealPrepFrequency] || 'Not specified'}</div>
+            <div><strong>Cooking Time per Day:</strong> {onboardingData.cookingTimePerDay ? onboardingData.cookingTimePerDay + ' min' : 'Not specified'}</div>
+            <div><strong>Weekly Grocery Budget:</strong> {onboardingData.weeklyGroceryBudget ? `$${onboardingData.weeklyGroceryBudget}` : 'Not specified'}</div>
+            <div><strong>Budget Priority:</strong> {BUDGET_PRIORITY_LABELS[onboardingData.budgetPriority] || 'Not specified'}</div>
+          </div>
+        </div>
         <div className="page-header">
           <div>
             <h1>Recipes</h1>
@@ -225,6 +297,9 @@ const Recipes = () => {
                 <div className="recipe-header">
                   <h3>{recipe.name}</h3>
                   <div className="recipe-tags">
+                    {isRecipeRecommended(recipe) && (
+                      <span className="recommended-label">Recommended</span>
+                    )}
                     {getAddedMealTypes(recipe.id) && (
                       <span className="added-label">{getAddedMealTypes(recipe.id)}</span>
                     )}

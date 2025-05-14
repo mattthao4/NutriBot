@@ -29,6 +29,7 @@
 .recipe-details-header {
   display: flex;
   gap: 2rem;
+  position: relative;
 }
 
 .recipe-details-image {
@@ -129,4 +130,94 @@
   color: var(--text-light);
   font-size: 0.875rem;
   padding: 0.25rem 0;
+}
+
+.user-preferences-float {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  width: 300px;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  padding: 1.25rem 1.5rem;
+  z-index: 10;
+  opacity: 0.97;
+  pointer-events: auto;
+}
+
+.user-preferences-card h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  color: var(--primary-1, #7BD0D4);
+}
+
+.user-preferences-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.98rem;
+}
+
+@media (max-width: 900px) {
+  .user-preferences-float {
+    position: static;
+    width: 100%;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+}
+
+.preferences-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.edit-preferences-btn {
+  background: none;
+  border: none;
+  padding: 0.2rem 0.3rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: var(--primary-1, #7BD0D4);
+  transition: color 0.2s;
+}
+
+.edit-preferences-btn:hover .edit-icon {
+  color: var(--primary-2, #329FFF);
+}
+
+.edit-icon {
+  width: 1.3em;
+  height: 1.3em;
+  pointer-events: none;
+}
+
+.back-to-recipes-btn {
+  position: absolute;
+  top: 1.2rem;
+  left: 1.2rem;
+  background: none;
+  border: none;
+  padding: 0.3rem 0.4rem;
+  cursor: pointer;
+  z-index: 20;
+  color: var(--primary-1, #7BD0D4);
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.back-to-recipes-btn:hover .back-arrow-icon {
+  color: var(--primary-2, #329FFF);
+}
+
+.back-arrow-icon {
+  width: 2em;
+  height: 2em;
+  pointer-events: none;
 }

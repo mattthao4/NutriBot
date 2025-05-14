@@ -15,109 +15,57 @@ import OnboardingBody from './pages/onboarding/OnboardingBody';
 import OnboardingDiet from './pages/onboarding/OnboardingDiet';
 import OnboardingSchedule from './pages/onboarding/OnboardingSchedule';
 import OnboardingBudget from './pages/onboarding/OnboardingBudget';
+import { AuthProvider, useAuth } from './AuthContext';
 import './styles.css';
-
-// A simple check for authentication status (you can make this more robust)
-const isAuthenticated = () => {
-  // For this demo, we'll just check if onboarding is marked as complete
-  // In a real app, you'd check for a valid token or session
-  return localStorage.getItem('hasCompletedOnboarding') === 'true';
-};
 
 // ProtectedRoute component
 const ProtectedRoute = ({ children }) => {
-  if (!isAuthenticated()) {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
   return children;
 };
 
+function AppContent() {
+  const { isAuthenticated } = useAuth();
+  return (
+    <Router>
+      {isAuthenticated && <Header />}
+      <main className={`main-container ${!isAuthenticated ? 'full-height' : 'with-header'}`}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          {/* Onboarding Routes */}
+          <Route path="/onboarding" element={<OnboardingContainer />}>
+            <Route index element={<Navigate to="goals" replace />} />
+            <Route path="goals" element={<OnboardingGoals />} />
+            <Route path="body" element={<OnboardingBody />} />
+            <Route path="diet" element={<OnboardingDiet />} />
+            <Route path="schedule" element={<OnboardingSchedule />} />
+            <Route path="budget" element={<OnboardingBudget />} />
+          </Route>
+          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/meal-planner" element={<ProtectedRoute><MealPlanner /></ProtectedRoute>} />
+          <Route path="/recipes">
+            <Route index element={<ProtectedRoute><Recipes /></ProtectedRoute>} />
+            <Route path=":recipeId" element={<ProtectedRoute><RecipeDetails /></ProtectedRoute>} />
+          </Route>
+          <Route path="/shopping-list" element={<ProtectedRoute><ShoppingList /></ProtectedRoute>} />
+          <Route path="/weekly-report" element={<ProtectedRoute><WeeklyReport /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
+        </Routes>
+      </main>
+    </Router>
+  );
+}
+
 function App() {
   return (
     <RecoilRoot>
-      <Router>
-        {/* Conditionally render Header based on authentication or route */}
-        {/* For simplicity, we might need a more sophisticated way to hide Header on LoginPage */}
-        {/* This basic check will hide it if not authenticated, which covers LoginPage */}
-        {isAuthenticated() && <Header />}
-        <main className={`main-container ${!isAuthenticated() ? 'full-height' : 'with-header'}`}>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            
-            {/* Onboarding Routes */}
-            <Route path="/onboarding" element={<OnboardingContainer />}>
-              {/* Index route for onboarding could be a welcome or the first step */}
-              <Route index element={<Navigate to="goals" replace />} /> 
-              <Route path="goals" element={<OnboardingGoals />} />
-              <Route path="body" element={<OnboardingBody />} />
-              <Route path="diet" element={<OnboardingDiet />} />
-              <Route path="schedule" element={<OnboardingSchedule />} />
-              <Route path="budget" element={<OnboardingBudget />} />
-            </Route>
-
-            <Route 
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/meal-planner" 
-              element={
-                <ProtectedRoute>
-                  <MealPlanner />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="/recipes">
-              <Route
-                index
-                element={
-                  <ProtectedRoute>
-                    <Recipes />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path=":recipeId"
-                element={
-                  <ProtectedRoute>
-                    <RecipeDetails />
-                  </ProtectedRoute>
-                }
-              />
-            </Route>
-            <Route 
-              path="/shopping-list" 
-              element={
-                <ProtectedRoute>
-                  <ShoppingList />
-                </ProtectedRoute>
-              }
-            />
-            <Route 
-              path="/weekly-report" 
-              element={
-                <ProtectedRoute>
-                  <WeeklyReport />
-                </ProtectedRoute>
-              }
-            />
-            {/* Add other protected routes here */}
-            <Route path="*" element={<Navigate to={isAuthenticated() ? "/dashboard" : "/login"} replace />} />
-          </Routes>
-        </main>
-      </Router>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </RecoilRoot>
   );
 }

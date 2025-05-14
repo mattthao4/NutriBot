@@ -116,6 +116,12 @@ export const onboardingStateAtom = atom({
   // Optional: Add effects for localStorage persistence if needed for the whole onboarding object
 });
 
+// Atom for tracking onboarding redirection
+export const onboardingRedirectAtom = atom({
+  key: 'onboardingRedirectAtom',
+  default: null, // or { type: 'recipes' } or { type: 'recipeDetails', recipeId: '...' }
+});
+
 // Helper function to get meal plan key
 export const getMealPlanKey = (date) => {
   const monday = new Date(date);

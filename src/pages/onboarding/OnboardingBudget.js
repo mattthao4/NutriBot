@@ -1,7 +1,7 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useRecoilState, useSetRecoilState } from 'recoil';
-import { onboardingStateAtom, currentWeekState, mealPlanState } from '../../recoil/atoms';
+import { onboardingStateAtom, currentWeekState, mealPlanState, onboardingRedirectAtom } from '../../recoil/atoms';
 import './OnboardingStep.css'; // Shared CSS
 
 const BUDGET_OPTIONS = [
@@ -19,9 +19,15 @@ const BUDGET_PRIORITY_OPTIONS = [
 
 const OnboardingBudget = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [onboardingData, setOnboardingData] = useRecoilState(onboardingStateAtom);
   const setCurrentWeek = useSetRecoilState(currentWeekState);
-  const setMealPlan = useSetRecoilState(mealPlanState); 
+  const setMealPlan = useSetRecoilState(mealPlanState);
+  const [onboardingRedirect, setOnboardingRedirect] = useRecoilState(onboardingRedirectAtom);
+
+  React.useEffect(() => {
+    if (onboardingRedirect === undefined) setOnboardingRedirect(null);
+  }, [onboardingRedirect, setOnboardingRedirect]);
 
   const handleBudgetSelect = (value) => {
     setOnboardingData(prev => ({ ...prev, weeklyGroceryBudget: value }));
@@ -46,10 +52,17 @@ const OnboardingBudget = () => {
       monday.setDate(now.getDate() - now.getDay() + 1);
       setCurrentWeek(monday.toISOString().slice(0, 10));
       setMealPlan({});
-      // localStorage.removeItem('currentWeek'); // Or let atom effects handle it
-      // localStorage.removeItem('mealPlan');
-
-      navigate('/');
+      // Redirect based on onboardingRedirect
+      if (onboardingRedirect && onboardingRedirect.type === 'recipes') {
+        setOnboardingRedirect(null);
+        navigate('/recipes');
+      } else if (onboardingRedirect && onboardingRedirect.type === 'recipeDetails') {
+        setOnboardingRedirect(null);
+        navigate(onboardingRedirect.recipeId ? `/recipes/${onboardingRedirect.recipeId}` : '/recipes');
+      } else {
+        setOnboardingRedirect(null);
+        navigate('/');
+      }
     } else {
       alert('Please complete all budget preferences.');
     }

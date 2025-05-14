@@ -3,10 +3,12 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { QuestionMarkCircleIcon, ArrowLeftOnRectangleIcon } from '@heroicons/react/24/outline';
 import '../../styles/theme.css';
 import './Header.css';
+import { useAuth } from '../../AuthContext';
 
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const navigation = [
     { name: 'Dashboard', href: '/' },
@@ -17,6 +19,7 @@ const Header = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('hasCompletedOnboarding');
+    logout();
     navigate('/login');
   };
 

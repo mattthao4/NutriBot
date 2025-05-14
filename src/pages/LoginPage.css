@@ -1,5 +1,5 @@
 :root {
-  --login-background-color: #f0f7f6; /* Light greenish-blue, similar to onboarding bg */
+  --login-background-color: #FBFFE4; /* Light greenish-blue, similar to onboarding bg */
   --login-card-background: #ffffff;
   --login-primary-accent: #65c8c4; /* Teal accent from onboarding */
   --login-text-primary: #333333;
@@ -15,7 +15,7 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: var(--login-background-color);
+  background-color: #FBFFE4;
   padding: 20px;
   box-sizing: border-box;
 }
