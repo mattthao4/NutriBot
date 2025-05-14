@@ -36,12 +36,13 @@ const MealPlanner = () => {
     navigate('/recipes');
   };
 
-  const formatDisplayDate = (dateString) => {
-    const date = new Date(dateString);
+  const formatDisplayDate = (dateInput) => {
+    const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
     return date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric'
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
     });
   };
 
