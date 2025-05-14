@@ -39,6 +39,7 @@ const ShoppingList = () => {
     currentDate.setDate(currentDate.getDate() - day);
     currentDate.setHours(0, 0, 0, 0);
     
+    // Generate dates from Sunday to Saturday
     for (let i = 0; i < 7; i++) {
       const newDate = new Date(currentDate);
       dates.push(newDate);
@@ -48,8 +49,8 @@ const ShoppingList = () => {
   };
 
   const weekDates = getWeekDates();
-  const weekStart = weekDates[0];
-  const weekEnd = weekDates[6];
+  const weekStart = weekDates[0]; // Sunday
+  const weekEnd = weekDates[6];   // Saturday
 
   const formatDisplayDate = (date) => {
     return date.toLocaleDateString('en-US', {
@@ -61,18 +62,64 @@ const ShoppingList = () => {
   };
 
   const handleDateChange = (direction) => {
-    const newDate = new Date(currentWeek);
-    if (direction === 'next') {
-      newDate.setDate(newDate.getDate() + 7);
+    if (viewMode === 'daily') {
+      if (!selectedDay) {
+        // If no day is selected, select the first day of the week (Sunday)
+        setSelectedDay(formatDate(weekStart));
+        return;
+      }
+      // In daily view, navigate through individual days
+      const newDate = new Date(selectedDay);
+      const currentDay = newDate.getDay();
+      
+      if (direction === 'next') {
+        if (currentDay === 6) { // If it's Saturday
+          // Move to next week's Sunday
+          newDate.setDate(newDate.getDate() + 1);
+          setCurrentWeek(formatDate(newDate));
+        } else {
+          newDate.setDate(newDate.getDate() + 1);
+        }
+      } else {
+        if (currentDay === 0) { // If it's Sunday
+          // Move to previous week's Saturday
+          newDate.setDate(newDate.getDate() - 1);
+          setCurrentWeek(formatDate(newDate));
+        } else {
+          newDate.setDate(newDate.getDate() - 1);
+        }
+      }
+      
+      setSelectedDay(formatDate(newDate));
     } else {
-      newDate.setDate(newDate.getDate() - 7);
+      // In weekly view, navigate through weeks
+      const newDate = new Date(currentWeek);
+      // Set to the Sunday of the current week
+      const day = newDate.getDay();
+      newDate.setDate(newDate.getDate() - day);
+      
+      if (direction === 'next') {
+        newDate.setDate(newDate.getDate() + 7);
+      } else {
+        newDate.setDate(newDate.getDate() - 7);
+      }
+      console.log(`${direction} week:`, formatDate(newDate));
+      setCurrentWeek(formatDate(newDate));
     }
-    console.log(`${direction} week:`, formatDate(newDate));
-    setCurrentWeek(formatDate(newDate));
   };
 
   const handleWeekSelect = (date) => {
-    setCurrentWeek(formatDate(date));
+    if (viewMode === 'daily') {
+      // In daily view, select the specific day
+      setSelectedDay(formatDate(date));
+      // Also update the current week to match the selected date
+      const weekStartDate = new Date(date);
+      weekStartDate.setDate(weekStartDate.getDate() - weekStartDate.getDay());
+      setCurrentWeek(formatDate(weekStartDate));
+    } else {
+      // In weekly view, select the week
+      setCurrentWeek(formatDate(date));
+    }
     setShowCalendar(false);
   };
 
@@ -171,13 +218,15 @@ const ShoppingList = () => {
           </span>
         </div>
         <div className="week-navigation">
-          <button 
-            onClick={() => handleDateChange('prev')} 
-            className="nav-button"
-            type="button"
-          >
-            <ChevronLeftIcon className="w-5 h-5" />
-          </button>
+          {viewMode === 'weekly' || (viewMode === 'daily' && selectedDay) ? (
+            <button 
+              onClick={() => handleDateChange('prev')} 
+              className="nav-button"
+              type="button"
+            >
+              <ChevronLeftIcon className="w-5 h-5" />
+            </button>
+          ) : null}
           <div className="week-range-container">
             <button 
               className="week-range-button"
@@ -195,23 +244,26 @@ const ShoppingList = () => {
             {showCalendar && (
               <div className="calendar-container">
                 <DatePicker
-                  selected={new Date(currentWeek)}
+                  selected={viewMode === 'daily' && selectedDay ? new Date(selectedDay) : new Date(currentWeek)}
                   onChange={handleWeekSelect}
                   inline
                   calendarClassName="custom-calendar"
-                  showWeekNumbers
-                  showWeekPicker
+                  showWeekNumbers={viewMode === 'weekly'}
+                  showWeekPicker={viewMode === 'weekly'}
+                  highlightDates={viewMode === 'daily' ? weekDates : []}
                 />
               </div>
             )}
           </div>
-          <button 
-            onClick={() => handleDateChange('next')} 
-            className="nav-button"
-            type="button"
-          >
-            <ChevronRightIcon className="w-5 h-5" />
-          </button>
+          {viewMode === 'weekly' || (viewMode === 'daily' && selectedDay) ? (
+            <button 
+              onClick={() => handleDateChange('next')} 
+              className="nav-button"
+              type="button"
+            >
+              <ChevronRightIcon className="w-5 h-5" />
+            </button>
+          ) : null}
         </div>
         <div className="view-toggle">
           <button 
@@ -225,22 +277,38 @@ const ShoppingList = () => {
           </button>
           <button 
             className={`toggle-button ${viewMode === 'daily' ? 'active' : ''}`}
-            onClick={() => setViewMode('daily')}
+            onClick={() => {
+              setViewMode('daily');
+              // When switching to daily view, select the first day of the current week
+              const weekStartDate = new Date(currentWeek);
+              weekStartDate.setDate(weekStartDate.getDate() - weekStartDate.getDay());
+              setSelectedDay(formatDate(weekStartDate));
+            }}
           >
             Daily
           </button>
         </div>
         {viewMode === 'daily' && (
           <div className="day-selector">
-            {weekDates.map((date) => (
-              <button
-                key={date.toISOString()}
-                className={`day-button ${selectedDay === formatDate(date) ? 'active' : ''}`}
-                onClick={() => setSelectedDay(formatDate(date))}
-              >
-                {date.toLocaleDateString('en-US', { weekday: 'short' })}
-              </button>
-            ))}
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => {
+              const isSelected = selectedDay ? new Date(selectedDay).getDay() === index : false;
+              return (
+                <button
+                  key={day}
+                  className={`day-button ${isSelected ? 'active' : ''}`}
+                  onClick={() => {
+                    // Find the same day of week in the selected week
+                    const selectedDate = new Date(selectedDay || weekStart);
+                    const daysToAdd = index - selectedDate.getDay();
+                    const newDate = new Date(selectedDate);
+                    newDate.setDate(selectedDate.getDate() + daysToAdd);
+                    setSelectedDay(formatDate(newDate));
+                  }}
+                >
+                  {day}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
