@@ -88,26 +88,119 @@
   align-items: center;
   gap: 1rem;
   margin-bottom: 1rem;
+  background: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
 }
 
-.nav-button {
+.week-range-container {
+  position: relative;
+  z-index: 2;
+}
+
+.week-range-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   background: none;
   border: none;
-  font-size: 1.5rem;
   cursor: pointer;
-  color: #2c3e50;
   padding: 0.5rem;
-  transition: color 0.2s;
+  border-radius: 8px;
+  transition: all 0.2s;
 }
 
-.nav-button:hover {
-  color: #3498db;
+.week-range-button:hover {
+  background: #f0f2f5;
 }
 
 .week-range {
   font-size: 1.1rem;
   color: #2c3e50;
   font-weight: 500;
+  min-width: 300px;
+  text-align: center;
+}
+
+.calendar-container {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  margin-top: 0.5rem;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 1rem;
+  pointer-events: auto;
+}
+
+.custom-calendar {
+  font-family: inherit;
+}
+
+.custom-calendar .react-datepicker__header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.custom-calendar .react-datepicker__day--selected {
+  background-color: #3498db;
+  border-radius: 50%;
+}
+
+.custom-calendar .react-datepicker__day--keyboard-selected {
+  background-color: #3498db;
+  border-radius: 50%;
+}
+
+.custom-calendar .react-datepicker__day:hover {
+  background-color: #f0f2f5;
+  border-radius: 50%;
+}
+
+.custom-calendar .react-datepicker__week-number {
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.nav-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #2c3e50;
+  padding: 0.5rem;
+  transition: all 0.2s;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  position: relative;
+  z-index: 3;
+  pointer-events: auto;
+}
+
+.nav-button:hover {
+  background: #f0f2f5;
+  color: #3498db;
+}
+
+.nav-button:active {
+  transform: scale(0.95);
+}
+
+.nav-button svg {
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
 }
 
 .view-toggle {
@@ -310,31 +403,34 @@
 
 .day-selector {
   display: flex;
-  flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .day-button {
   padding: 0.5rem 1rem;
-  border: 2px solid var(--primary-1);
-  background: var(--white);
-  color: var(--primary-1);
+  border: 1px solid #e0e0e0;
+  background: white;
+  color: #2c3e50;
   cursor: pointer;
-  border-radius: var(--radius);
-  transition: all 0.2s ease;
+  border-radius: 20px;
+  transition: all 0.2s;
   font-weight: 500;
   font-size: 0.9rem;
 }
 
 .day-button:hover {
-  background-color: var(--primary-1);
-  color: var(--white);
+  background: #f0f2f5;
+  border-color: #3498db;
+  color: #3498db;
 }
 
 .day-button.active {
-  background-color: var(--primary-1);
-  color: var(--white);
+  background: #3498db;
+  color: white;
+  border-color: #3498db;
 }
 
 .macro-charts {

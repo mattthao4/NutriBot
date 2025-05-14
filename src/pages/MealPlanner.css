@@ -49,7 +49,7 @@
 
 .meal-planner-grid {
   display: grid;
-  grid-template-columns: 120px repeat(4, 250px) 180px;
+  grid-template-columns: 8% repeat(4, 20%) 10%;
   gap: 0.25rem;
   border: 1px solid #e2e8f0;
   border-radius: 0.5rem;
@@ -69,6 +69,7 @@
   padding: 1rem;
   text-align: center;
   font-weight: 600;
+  width: auto;
   border-radius: 0.5rem;
   position: sticky;
   top: 0;
@@ -395,7 +396,7 @@
 .nutrition-cell {
   width: auto;
   min-width: 0;
-  max-width: 150px;
+  max-width: auto;
   box-sizing: border-box;
   padding: 0.5rem;
   background-color: #f8fafc;
@@ -506,12 +507,12 @@
   }
   
   .meal-planner-grid {
-    grid-template-columns: fit-content(80px) repeat(4, fit-content(200px)) fit-content(120px);
+    grid-template-columns: 8% repeat(4, 20%) 10%;
     gap: 0.25rem;
-    padding: 0.25rem;
+    padding: 0.25rem 0.25rem 0.25rem 0.25rem;
   }
   .meal-cell, .nutrition-cell {
-    min-width: 80px;
+    min-width: auto;
     padding: 0.1rem;
   }
 }
@@ -533,7 +534,7 @@
   }
 
   .meal-planner-grid {
-    grid-template-columns: fit-content(60px) repeat(4, fit-content(150px)) fit-content(80px);
+    grid-template-columns: 8% repeat(4, 20%) 10%;
     gap: 0.1rem;
     padding: 0.1rem;
   }
@@ -596,6 +597,7 @@
   border-radius: 0.5rem;
   position: sticky;
   top: 0;
+  min-width: auto;
   z-index: 1;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   font-size: 1.1rem;
@@ -608,6 +610,9 @@
   margin: 0 auto;
   padding: 1rem 1rem 1rem 1rem;
   font-size: 1.1rem;
+  display: grid;
+  grid-template-columns: 8% repeat(4, 20%) 10%;
+  gap: 0.25rem;
 }
 .enhanced-grid-header {
   font-size: 1.2rem;
@@ -627,7 +632,7 @@
   padding: 0.5rem 0.5rem;
 }
 .enhanced-nutrition-cell {
-  min-width: 180px;
+  min-width: auto;
   font-size: 1rem;
   padding: 0.5rem 0.5rem;
 }

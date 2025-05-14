@@ -3,6 +3,8 @@ import { XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/2
 import { useNavigate } from 'react-router-dom';
 import { useRecoilState } from 'recoil';
 import { mealPlanState, currentWeekState, formatDate } from '../recoil/atoms';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 import '../styles/theme.css';
 import './ShoppingList.css';
 
@@ -11,8 +13,9 @@ const ShoppingList = () => {
   const [checkedItems, setCheckedItems] = useState({});
   const [mealPlan] = useRecoilState(mealPlanState);
   const [currentWeek, setCurrentWeek] = useRecoilState(currentWeekState);
-  const [viewMode, setViewMode] = useState('weekly'); // 'weekly' or 'daily'
+  const [viewMode, setViewMode] = useState('weekly');
   const [selectedDay, setSelectedDay] = useState(null);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   // Load checked items from localStorage on component mount
   useEffect(() => {
@@ -31,38 +34,62 @@ const ShoppingList = () => {
   const getWeekDates = () => {
     const dates = [];
     const currentDate = new Date(currentWeek);
+    // Set to Sunday
+    const day = currentDate.getDay();
+    currentDate.setDate(currentDate.getDate() - day);
     currentDate.setHours(0, 0, 0, 0);
+    
     for (let i = 0; i < 7; i++) {
-      dates.push(new Date(currentDate));
+      const newDate = new Date(currentDate);
+      dates.push(newDate);
       currentDate.setDate(currentDate.getDate() + 1);
     }
     return dates;
   };
 
-  // Get the start and end dates of the current week
   const weekDates = getWeekDates();
   const weekStart = weekDates[0];
   const weekEnd = weekDates[6];
 
-  const handlePreviousWeek = () => {
-    const newWeekStart = new Date(weekStart);
-    newWeekStart.setDate(newWeekStart.getDate() - 7);
-    setCurrentWeek(newWeekStart);
+  const formatDisplayDate = (date) => {
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
   };
 
-  const handleNextWeek = () => {
-    const newWeekStart = new Date(weekStart);
-    newWeekStart.setDate(newWeekStart.getDate() + 7);
-    setCurrentWeek(newWeekStart);
+  const handleDateChange = (direction) => {
+    const newDate = new Date(currentWeek);
+    if (direction === 'next') {
+      newDate.setDate(newDate.getDate() + 7);
+    } else {
+      newDate.setDate(newDate.getDate() - 7);
+    }
+    console.log(`${direction} week:`, formatDate(newDate));
+    setCurrentWeek(formatDate(newDate));
+  };
+
+  const handleWeekSelect = (date) => {
+    setCurrentWeek(formatDate(date));
+    setShowCalendar(false);
   };
 
   const generateShoppingList = (plan) => {
+    if (!plan) return;
+    
     const ingredients = new Map();
+    const weekStartStr = formatDate(weekStart);
+    const weekEndStr = formatDate(weekEnd);
     
     // Process all meals in the plan
     Object.entries(plan).forEach(([day, meals]) => {
       // Skip if we're in daily view and this isn't the selected day
       if (viewMode === 'daily' && selectedDay && day !== selectedDay) return;
+      
+      // Skip if the day is outside our current week
+      if (day < weekStartStr || day > weekEndStr) return;
 
       Object.entries(meals).forEach(([mealType, recipes]) => {
         recipes.forEach(recipe => {
@@ -74,13 +101,13 @@ const ShoppingList = () => {
                 const existing = ingredients.get(key);
                 ingredients.set(key, {
                   ...existing,
-                  quantity: existing.quantity + (ingredient.quantity || 1),
+                  quantity: existing.quantity + (Number(ingredient.quantity) || 1),
                   recipes: [...existing.recipes, recipe.name]
                 });
               } else {
                 ingredients.set(key, {
                   name: ingredient.name,
-                  quantity: ingredient.quantity || 1,
+                  quantity: Number(ingredient.quantity) || 1,
                   unit: ingredient.unit || '',
                   recipes: [recipe.name]
                 });
@@ -94,9 +121,10 @@ const ShoppingList = () => {
     setShoppingList(Array.from(ingredients.values()));
   };
 
+  // Update shopping list when meal plan, view mode, selected day, or current week changes
   useEffect(() => {
     generateShoppingList(mealPlan);
-  }, [mealPlan, viewMode, selectedDay]);
+  }, [mealPlan, viewMode, selectedDay, currentWeek]);
 
   const handleCheckItem = (itemName) => {
     setCheckedItems(prev => {
@@ -112,12 +140,12 @@ const ShoppingList = () => {
     setCheckedItems({});
   };
 
-  const handleRemoveItem = (category, itemName) => {
+  const handleRemoveItem = (itemName) => {
     setShoppingList(prevList => prevList.filter(item => item.name !== itemName));
   };
 
   const handleClearAll = () => {
-    setShoppingList({});
+    setShoppingList([]);
     setCheckedItems({});
   };
 
@@ -143,20 +171,55 @@ const ShoppingList = () => {
           </span>
         </div>
         <div className="week-navigation">
-          <button onClick={handlePreviousWeek} className="nav-button">
-            ←
+          <button 
+            onClick={() => handleDateChange('prev')} 
+            className="nav-button"
+            type="button"
+          >
+            <ChevronLeftIcon className="w-5 h-5" />
           </button>
-          <span className="week-range">
-            {formatDate(weekStart)} - {formatDate(weekEnd)}
-          </span>
-          <button onClick={handleNextWeek} className="nav-button">
-            →
+          <div className="week-range-container">
+            <button 
+              className="week-range-button"
+              onClick={() => setShowCalendar(!showCalendar)}
+              type="button"
+            >
+              <span className="week-range">
+                {viewMode === 'weekly' 
+                  ? `${formatDisplayDate(weekStart)} - ${formatDisplayDate(weekEnd)}`
+                  : selectedDay 
+                    ? formatDisplayDate(new Date(selectedDay))
+                    : 'Select a day'}
+              </span>
+            </button>
+            {showCalendar && (
+              <div className="calendar-container">
+                <DatePicker
+                  selected={new Date(currentWeek)}
+                  onChange={handleWeekSelect}
+                  inline
+                  calendarClassName="custom-calendar"
+                  showWeekNumbers
+                  showWeekPicker
+                />
+              </div>
+            )}
+          </div>
+          <button 
+            onClick={() => handleDateChange('next')} 
+            className="nav-button"
+            type="button"
+          >
+            <ChevronRightIcon className="w-5 h-5" />
           </button>
         </div>
         <div className="view-toggle">
           <button 
             className={`toggle-button ${viewMode === 'weekly' ? 'active' : ''}`}
-            onClick={() => setViewMode('weekly')}
+            onClick={() => {
+              setViewMode('weekly');
+              setSelectedDay(null);
+            }}
           >
             Weekly
           </button>
@@ -167,6 +230,19 @@ const ShoppingList = () => {
             Daily
           </button>
         </div>
+        {viewMode === 'daily' && (
+          <div className="day-selector">
+            {weekDates.map((date) => (
+              <button
+                key={date.toISOString()}
+                className={`day-button ${selectedDay === formatDate(date) ? 'active' : ''}`}
+                onClick={() => setSelectedDay(formatDate(date))}
+              >
+                {date.toLocaleDateString('en-US', { weekday: 'short' })}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="shopping-list-grid">
@@ -185,10 +261,12 @@ const ShoppingList = () => {
                       className="item-checkbox"
                     />
                     <span className="item-name">{item.name}</span>
-                    <span className="item-quantity">{item.quantity}</span>
+                    <span className="item-quantity">
+                      {item.quantity} {item.unit}
+                    </span>
                   </div>
                   <button 
-                    onClick={() => handleRemoveItem('default', item.name)}
+                    onClick={() => handleRemoveItem(item.name)}
                     className="remove-button"
                   >
                     ×
@@ -213,10 +291,12 @@ const ShoppingList = () => {
                       className="item-checkbox"
                     />
                     <span className="item-name">{item.name}</span>
-                    <span className="item-quantity">{item.quantity}</span>
+                    <span className="item-quantity">
+                      {item.quantity} {item.unit}
+                    </span>
                   </div>
                   <button 
-                    onClick={() => handleRemoveItem('default', item.name)}
+                    onClick={() => handleRemoveItem(item.name)}
                     className="remove-button"
                   >
                     ×
