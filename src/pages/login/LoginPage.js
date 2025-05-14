@@ -1,6 +1,15 @@
+/**
+ * LoginPage.js
+ * 
+ * This file defines the LoginPage component, which provides a user interface for logging into the application.
+ * It includes input fields for username and password, and handles user authentication.
+ * 
+ * Author(s): Eli Goldberger
+ */
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../../AuthContext';
 import './LoginPage.css'; // We will create this file next
 
 const LoginPage = () => {

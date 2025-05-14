@@ -1,3 +1,12 @@
+/**
+ * OnboardingContainer.js
+ * 
+ * This file defines the OnboardingContainer component, which serves as the main wrapper for the onboarding process.
+ * It manages the overall layout and navigation between different onboarding steps, providing a consistent user experience.
+ * 
+ * Author(s): Eli Goldberger
+ */
+
 import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import './OnboardingContainer.css'; // We'll create this next

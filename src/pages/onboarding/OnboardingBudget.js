@@ -1,3 +1,12 @@
+/**
+ * OnboardingBudget.js
+ * 
+ * This file defines the OnboardingBudget component, which allows users to set their budget preferences for meal planning.
+ * It includes options for weekly grocery budget and budget priority (cost-focused, balanced, or quality-focused).
+ * 
+ * Author(s): Eli Goldberger
+ */
+
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useRecoilState, useSetRecoilState } from 'recoil';

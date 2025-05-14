@@ -1,10 +1,19 @@
+/**
+ * Recipes.js
+ * 
+ * This file defines the Recipes component, which displays a collection of recipes that users can browse and select.
+ * It includes filtering options for diet type, cooking time, and calories, and allows users to add recipes to their meal plan.
+ * 
+ * Author(s): Lukas Singer & Matthew Thao
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { mealPlanState, selectedMealSlotState, onboardingStateAtom, onboardingRedirectAtom } from '../recoil/atoms';
-import '../styles/theme.css';
+import { mealPlanState, selectedMealSlotState, onboardingStateAtom, onboardingRedirectAtom } from '../../recoil/atoms';
+import '../../styles/theme.css';
 import './Recipes.css';
-import recipes from '../data/recipes';
+import recipes from '../../data/recipes';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 
 const DIET_TYPE_LABELS = {

@@ -1,10 +1,19 @@
+/**
+ * RecipeDetails.js
+ * 
+ * This file defines the RecipeDetails component, which displays detailed information about a selected recipe.
+ * It includes the recipe's name, ingredients, instructions, and nutritional information.
+ * 
+ * Author(s): Lukas Singer
+ */
+
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { mealPlanState, selectedMealSlotState, onboardingStateAtom, onboardingRedirectAtom } from '../recoil/atoms';
-import '../styles/theme.css';
+import { mealPlanState, selectedMealSlotState, onboardingStateAtom, onboardingRedirectAtom } from '../../recoil/atoms';
+import '../../styles/theme.css';
 import './RecipeDetails.css';
-import recipes from '../data/recipes';
+import recipes from '../../data/recipes';
 import { PencilSquareIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 const DIET_TYPE_LABELS = {

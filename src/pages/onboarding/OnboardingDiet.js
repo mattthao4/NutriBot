@@ -1,3 +1,12 @@
+/**
+ * OnboardingDiet.js
+ * 
+ * This file defines the OnboardingDiet component, which allows users to specify their dietary preferences and restrictions.
+ * It includes options for diet type (e.g., vegetarian, vegan, keto) and food allergies or intolerances.
+ * 
+ * Author(s): Eli Goldberger
+ */
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilState } from 'recoil';

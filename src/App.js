@@ -1,14 +1,25 @@
+/**
+ * App.js
+ * 
+ * This file defines the main App component and routing structure of the NutriBot application.
+ * It sets up the React Router configuration, authentication protection, and manages the overall
+ * application layout. The file also includes the Recoil state management root and authentication
+ * provider wrapper.
+ * 
+ * Author(s): Matthew Thao, Lukas Singer, Daniel Bauer, Eli Goldberger
+ */
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { RecoilRoot } from 'recoil';
 import Header from './components/layout/Header';
-import Recipes from './pages/Recipes';
-import RecipeDetails from './pages/RecipeDetails';
-import ShoppingList from './pages/ShoppingList';
-import WeeklyReport from './pages/WeeklyReport';
-import MealPlanner from './pages/MealPlanner';
-import Dashboard from './pages/Dashboard';
-import LoginPage from './pages/LoginPage';
+import Recipes from './pages/recipes/Recipes';
+import RecipeDetails from './pages/recipe-details/RecipeDetails';
+import ShoppingList from './pages/shopping-list/ShoppingList';
+import WeeklyReport from './pages/weekly-report/WeeklyReport';
+import MealPlanner from './pages/meal-planner/MealPlanner';
+import Dashboard from './pages/dashboard/Dashboard';
+import LoginPage from './pages/login/LoginPage';
 import OnboardingContainer from './pages/onboarding/OnboardingContainer';
 import OnboardingGoals from './pages/onboarding/OnboardingGoals';
 import OnboardingBody from './pages/onboarding/OnboardingBody';

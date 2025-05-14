@@ -1,9 +1,19 @@
+/**
+ * Dashboard.js
+ * 
+ * This file defines the Dashboard component, which serves as the main overview of the user's meal plan.
+ * It displays the selected date, meal statistics, and a list of meals for the day.
+ * 
+ * Author(s): Matthew Thao
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
-import { useRecoilValue } from 'recoil';
-import { mealPlanState, currentWeekState, getWeekDates } from '../recoil/atoms';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { mealPlanState, currentWeekState, getWeekDates, selectedDateState } from '../../recoil/atoms';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import '../../styles/theme.css';
 import './Dashboard.css';
 
 const Dashboard = () => {

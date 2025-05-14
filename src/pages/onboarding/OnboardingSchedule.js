@@ -1,3 +1,12 @@
+/**
+ * OnboardingSchedule.js
+ * 
+ * This file defines the OnboardingSchedule component, which allows users to set their meal schedule preferences.
+ * It includes options for selecting the number of meals per day, meal prep frequency, and cooking time.
+ * 
+ * Author(s): Eli Goldberger
+ */
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilState } from 'recoil';

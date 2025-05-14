@@ -1,11 +1,20 @@
+/**
+ * ShoppingList.js
+ * 
+ * This file defines the ShoppingList component, which displays a list of ingredients needed for the selected meal plan.
+ * It allows users to check off items as they shop and toggle between weekly and daily views.
+ * 
+ * Author(s): Daniel Bauer
+ */
+
 import React, { useState, useEffect } from 'react';
 import { XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
-import { useRecoilState } from 'recoil';
-import { mealPlanState, currentWeekState, formatDate } from '../recoil/atoms';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { mealPlanState, currentWeekState, formatDate } from '../../recoil/atoms';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
-import '../styles/theme.css';
+import '../../styles/theme.css';
 import './ShoppingList.css';
 
 const ShoppingList = () => {

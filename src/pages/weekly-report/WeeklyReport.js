@@ -1,10 +1,19 @@
+/**
+ * WeeklyReport.js
+ * 
+ * This file defines the WeeklyReport component, which displays a summary of the user's meal plan for the selected week.
+ * It includes statistics such as total calories, average calories per meal, and a breakdown of meal types.
+ * 
+ * Author(s): Daniel Bauer
+ */
+
 import React, { useState, useEffect } from 'react';
-import { useRecoilState } from 'recoil';
-import { mealPlanState, currentWeekState, formatDate, formatDisplayDate, getWeekDates } from '../recoil/atoms';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { mealPlanState, currentWeekState, formatDate, formatDisplayDate, getWeekDates } from '../../recoil/atoms';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
-import '../styles/theme.css';
+import '../../styles/theme.css';
 import './WeeklyReport.css';
 import { CalendarIcon, ChartBarIcon, ArrowTrendingUpIcon, FireIcon, ScaleIcon, BeakerIcon } from '@heroicons/react/24/outline';
 

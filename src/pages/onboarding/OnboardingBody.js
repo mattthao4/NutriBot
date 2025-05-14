@@ -1,3 +1,12 @@
+/**
+ * OnboardingBody.js
+ * 
+ * This file defines the OnboardingBody component, which allows users to input their body measurements and physical characteristics.
+ * It includes fields for height, weight, age, gender, and activity level to help personalize meal recommendations.
+ * 
+ * Author(s): Eli Goldberger
+ */
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilState } from 'recoil';

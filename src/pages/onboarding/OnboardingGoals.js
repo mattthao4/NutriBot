@@ -1,3 +1,12 @@
+/**
+ * OnboardingGoals.js
+ * 
+ * This file defines the OnboardingGoals component, which allows users to set their health and nutrition goals.
+ * It includes options for weight management, fitness goals, and specific dietary objectives to personalize meal recommendations.
+ * 
+ * Author(s): Eli Goldberger
+ */
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilState } from 'recoil';

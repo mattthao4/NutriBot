@@ -1,9 +1,18 @@
+/**
+ * MealPlanner.js
+ * 
+ * This file defines the MealPlanner component, which allows users to plan their meals for the week.
+ * It provides a grid layout for selecting meal slots and adding recipes to each slot.
+ * 
+ * Author(s): Matthew Thao
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import { XMarkIcon, PlusIcon, QuestionMarkCircleIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
-import { currentWeekState, mealPlanState, getMealPlanKey, formatDate, selectedMealSlotState, getWeekDates } from '../recoil/atoms';
-import '../styles/theme.css';
+import { currentWeekState, mealPlanState, getMealPlanKey, formatDate, selectedMealSlotState, getWeekDates } from '../../recoil/atoms';
+import '../../styles/theme.css';
 import './MealPlanner.css';
 
 const MealPlanner = () => {

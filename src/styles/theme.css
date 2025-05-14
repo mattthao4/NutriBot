@@ -1,3 +1,11 @@
+/**
+ * theme.css
+ * 
+ * This file defines the application's theme variables and color scheme, including primary colors,
+ * secondary colors, and other design tokens. It provides a consistent visual language across
+ * all components and pages.
+ */
+
 :root {
   --primary-1: #7BD0D4;
   --primary-2: #329FFF;
@@ -12,7 +20,7 @@
   --secondary-5: #1e3a8a;
   
   --accent-1: #FBFFE4;
-  --accent-2: #F9CF6A;
+  --accent-2: #836f42;
   --accent-3: #b45309;
   --accent-4: #92400e;
   --accent-5: #78350f;
