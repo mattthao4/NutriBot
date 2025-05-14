@@ -218,52 +218,21 @@ const ShoppingList = () => {
           </span>
         </div>
         <div className="week-navigation">
-          {viewMode === 'weekly' || (viewMode === 'daily' && selectedDay) ? (
-            <button 
-              onClick={() => handleDateChange('prev')} 
-              className="nav-button"
-              type="button"
-            >
-              <ChevronLeftIcon className="w-5 h-5" />
-            </button>
-          ) : null}
-          <div className="week-range-container">
-            <button 
-              className="week-range-button"
-              onClick={() => setShowCalendar(!showCalendar)}
-              type="button"
-            >
-              <span className="week-range">
-                {viewMode === 'weekly' 
-                  ? `${formatDisplayDate(weekStart)} - ${formatDisplayDate(weekEnd)}`
-                  : selectedDay 
-                    ? formatDisplayDate(new Date(selectedDay))
-                    : 'Select a day'}
-              </span>
-            </button>
-            {showCalendar && (
-              <div className="calendar-container">
-                <DatePicker
-                  selected={viewMode === 'daily' && selectedDay ? new Date(selectedDay) : new Date(currentWeek)}
-                  onChange={handleWeekSelect}
-                  inline
-                  calendarClassName="custom-calendar"
-                  showWeekNumbers={viewMode === 'weekly'}
-                  showWeekPicker={viewMode === 'weekly'}
-                  highlightDates={viewMode === 'daily' ? weekDates : []}
-                />
-              </div>
-            )}
-          </div>
-          {viewMode === 'weekly' || (viewMode === 'daily' && selectedDay) ? (
-            <button 
-              onClick={() => handleDateChange('next')} 
-              className="nav-button"
-              type="button"
-            >
-              <ChevronRightIcon className="w-5 h-5" />
-            </button>
-          ) : null}
+          <button className="button button-secondary" onClick={() => handleDateChange('prev')}>
+            <ChevronLeftIcon className="w-5 h-5" />
+            Previous Week
+          </button>
+          <h2>
+            {viewMode === 'weekly' 
+              ? `${formatDisplayDate(weekStart)} - ${formatDisplayDate(weekEnd)}`
+              : selectedDay 
+                ? formatDisplayDate(new Date(selectedDay))
+                : 'Select a day'}
+          </h2>
+          <button className="button button-secondary" onClick={() => handleDateChange('next')}>
+            Next Week
+            <ChevronRightIcon className="w-5 h-5" />
+          </button>
         </div>
         <div className="view-toggle">
           <button 

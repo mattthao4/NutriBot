@@ -238,7 +238,10 @@ const MealPlanner = () => {
       <div className="page-background"/>
       <div className="meal-planner-content-wrapper">
         <div className="page-header">
-          <h1>Meal Planner</h1>
+          <div className="title-section">
+            <h1>Meal Planner</h1>
+            <p className="subtitle">Plan your meals for the week. Add recipes to each meal slot and track your nutrition.</p>
+          </div>
           <div className="page-actions">
             <button className="button button-help" onClick={() => setShowHelp(!showHelp)}>
               <QuestionMarkCircleIcon className="w-5 h-5" />

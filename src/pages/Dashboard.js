@@ -118,10 +118,13 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-page">
-      <div className="page-background"/>
-      <div className="dashboard-content-wrapper">
+      <div className="page-background" />
+      <div className="page-content-wrapper">
         <div className="page-header">
-          <h1>Daily Summary</h1>
+          <div className="title-section">
+            <h1>Dashboard</h1>
+            <p className="subtitle">Welcome to your nutrition dashboard. Here you can track your progress and view your meal plans.</p>
+          </div>
           <div className="date-navigation static-width">
             <button className="button" onClick={handlePrevDay} title="Previous Day"><ChevronLeftIcon width={20} /></button>
             <span className="date-display" onClick={() => setShowDatePicker(true)} style={{ cursor: 'pointer', minWidth: 200, textAlign: 'center' }}>
@@ -142,7 +145,7 @@ const Dashboard = () => {
               </div>
             )}
           </div>
-            </div>
+        </div>
         <div className="dashboard-grid">
           <div className="dashboard-card summary-stats">
             <h2>Daily Summary</h2>
