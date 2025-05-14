@@ -8,10 +8,53 @@ const getCurrentWeekMonday = () => {
   return monday.toISOString().slice(0, 10);
 };
 
+// Helper function to format date as YYYY-MM-DD
+export const formatDate = (date) => {
+  const dateObj = date instanceof Date ? date : new Date(date);
+  return dateObj.toISOString().split('T')[0];
+};
+
+// Helper function to format date in a more readable format
+export const formatDisplayDate = (date) => {
+  const dateObj = date instanceof Date ? date : new Date(date);
+  return dateObj.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+};
+
+// Helper function to get start of week for a given date
+export const getWeekStart = (date) => {
+  const start = new Date(date);
+  start.setDate(date.getDate() - date.getDay());
+  return start;
+};
+
+// Helper function to get end of week for a given date
+export const getWeekEnd = (date) => {
+  const end = new Date(date);
+  end.setDate(date.getDate() + (6 - date.getDay()));
+  return end;
+};
+
+// Helper function to get all dates in a week
+export const getWeekDates = (date) => {
+  const start = getWeekStart(date);
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const currentDate = new Date(start);
+    currentDate.setDate(start.getDate() + i);
+    dates.push(formatDate(currentDate));
+  }
+  return dates;
+};
+
 // Atom for the current week's start date
 export const currentWeekState = atom({
   key: 'currentWeekState',
-  default: getCurrentWeekMonday(),
+  default: formatDate(new Date()),
   effects: [
     ({ onSet }) => {
       onSet((newValue) => {
@@ -27,7 +70,7 @@ export const currentWeekState = atom({
   ],
 });
 
-// Atom for the meal plan
+// Meal plan state - now using dates as keys
 export const mealPlanState = atom({
   key: 'mealPlanState',
   default: {},
@@ -46,7 +89,7 @@ export const mealPlanState = atom({
   ],
 });
 
-// Atom for the selected meal slot
+// Selected meal slot state - now using date instead of day
 export const selectedMealSlotState = atom({
   key: 'selectedMealSlotState',
   default: null,
@@ -78,23 +121,4 @@ export const getMealPlanKey = (date) => {
   const monday = new Date(date);
   monday.setDate(monday.getDate() - monday.getDay() + 1);
   return monday.toISOString().slice(0, 10);
-};
-
-// Helper function to format date for display
-export const formatDate = (dateString) => {
-  // Convert string to Date object if it's not already
-  const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
-  
-  // Check if date is valid
-  if (!(date instanceof Date) || isNaN(date)) {
-    console.error('Invalid date:', dateString);
-    return 'Invalid Date';
-  }
-
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  });
 }; 

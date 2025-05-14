@@ -2,36 +2,47 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilState } from 'recoil';
 import { XMarkIcon, PlusIcon, QuestionMarkCircleIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
-import { currentWeekState, mealPlanState, getMealPlanKey, formatDate } from '../recoil/atoms';
+import { currentWeekState, mealPlanState, getMealPlanKey, formatDate, selectedMealSlotState, getWeekDates } from '../recoil/atoms';
 import '../styles/theme.css';
 import './MealPlanner.css';
 
 const MealPlanner = () => {
   const navigate = useNavigate();
-  const [currentWeekStart, setCurrentWeekStart] = useRecoilState(currentWeekState);
+  const [currentWeek, setCurrentWeek] = useRecoilState(currentWeekState);
   const [mealPlan, setMealPlan] = useRecoilState(mealPlanState);
+  const [selectedMealSlot, setSelectedMealSlot] = useRecoilState(selectedMealSlotState);
   const [showHelp, setShowHelp] = useState(false);
 
-  // Find today's date (midnight, no time, local timezone)
-  const todayDate = new Date();
-  todayDate.setHours(0, 0, 0, 0);
+  const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
+  const weekDates = getWeekDates(new Date(currentWeek));
 
-  // Helper to get week dates at midnight (local)
-  const getWeekDates = () => {
-    const dates = [];
-    const currentDate = new Date(currentWeekStart);
-    currentDate.setHours(0, 0, 0, 0);
-    for (let i = 0; i < 7; i++) {
-      dates.push(new Date(currentDate));
-      currentDate.setDate(currentDate.getDate() + 1);
+  const handleDateChange = (direction) => {
+    const newDate = new Date(currentWeek);
+    if (direction === 'next') {
+      newDate.setDate(newDate.getDate() + 7);
+    } else {
+      newDate.setDate(newDate.getDate() - 7);
     }
-    return dates;
+    setCurrentWeek(formatDate(newDate));
   };
 
-  const navigateWeek = (direction) => {
-    const newDate = new Date(currentWeekStart);
-    newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
-    setCurrentWeekStart(newDate.toISOString().slice(0, 10));
+  const handleMealSlotClick = (date, mealType) => {
+    const mealSlot = {
+      date,
+      mealType,
+    };
+    setSelectedMealSlot(mealSlot);
+    localStorage.setItem('selectedMealSlot', JSON.stringify(mealSlot));
+    navigate('/recipes');
+  };
+
+  const formatDisplayDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   const calculateDayNutrition = (day) => {
@@ -52,19 +63,6 @@ const MealPlanner = () => {
       });
     }
     return nutrition;
-  };
-
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
-
-  const handleMealSlotClick = (day, mealType) => {
-    // Store the selected meal slot in localStorage
-    localStorage.setItem('selectedMealSlot', JSON.stringify({ 
-      day, 
-      mealType, 
-      week: getMealPlanKey(currentWeekStart) 
-    }));
-    navigate('/recipes');
   };
 
   const handleRemoveMeal = (e, day, mealType, recipeIndex) => {
@@ -189,6 +187,16 @@ const MealPlanner = () => {
     );
   };
 
+  const today = new Date();
+  const isToday = (d) => {
+    const day = new Date(d);
+    return (
+      day.getFullYear() === today.getFullYear() &&
+      day.getMonth() === today.getMonth() &&
+      day.getDate() === today.getDate()
+    );
+  };
+
   // Fallback for adding a meal if recipe.js doesn't use the week key
   useEffect(() => {
     // Check if a new meal was added in localStorage
@@ -203,17 +211,17 @@ const MealPlanner = () => {
       }
       if (selectedSlot) {
         // Support both new and old formats
-        const slotWeek = selectedSlot.week || getMealPlanKey(currentWeekStart);
-        const currentWeekKey = getMealPlanKey(currentWeekStart);
+        const slotWeek = selectedSlot.week || getMealPlanKey(currentWeek);
+        const currentWeekKey = getMealPlanKey(currentWeek);
         if (slotWeek === currentWeekKey || !selectedSlot.week) {
           setMealPlan(prev => {
             const updated = { ...prev };
-            if (!updated[selectedSlot.day]) updated[selectedSlot.day] = {};
-            if (!updated[selectedSlot.day][selectedSlot.mealType]) updated[selectedSlot.day][selectedSlot.mealType] = [];
+            if (!updated[selectedSlot.date]) updated[selectedSlot.date] = {};
+            if (!updated[selectedSlot.date][selectedSlot.mealType]) updated[selectedSlot.date][selectedSlot.mealType] = [];
             // Allow duplicates: always push the added meal
-            updated[selectedSlot.day][selectedSlot.mealType].push(addedMeal);
+            updated[selectedSlot.date][selectedSlot.mealType].push(addedMeal);
             // Persist to localStorage for the current week
-            const weekKey = getMealPlanKey(currentWeekStart);
+            const weekKey = getMealPlanKey(currentWeek);
             localStorage.setItem('mealPlan-' + weekKey, JSON.stringify(updated));
             return updated;
           });
@@ -223,14 +231,14 @@ const MealPlanner = () => {
         }
       }
     }
-  }, [currentWeekStart, setMealPlan]);
+  }, [currentWeek, setMealPlan]);
 
   return (
     <div className="meal-planner-page">
-      <div className="page-background" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1490818387583-1baba5e638af?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')" }} />
-      <div className="page-content-wrapper">
+      <div className="page-background"/>
+      <div className="meal-planner-content-wrapper">
         <div className="page-header">
-          <h1>Weekly Meal Planner</h1>
+          <h1>Meal Planner</h1>
           <div className="page-actions">
             <button className="button button-help" onClick={() => setShowHelp(!showHelp)}>
               <QuestionMarkCircleIcon className="w-5 h-5" />
@@ -247,14 +255,14 @@ const MealPlanner = () => {
           </div>
         </div>
         <div className="week-navigation">
-          <button className="button button-secondary" onClick={() => navigateWeek('prev')}>
+          <button className="button button-secondary" onClick={() => handleDateChange('prev')}>
             <ChevronLeftIcon className="w-5 h-5" />
             Previous Week
           </button>
           <h2>
-            {formatDate(currentWeekStart)} - {formatDate(new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000))}
+            {formatDisplayDate(weekDates[0])} - {formatDisplayDate(weekDates[6])}
           </h2>
-          <button className="button button-secondary" onClick={() => navigateWeek('next')}>
+          <button className="button button-secondary" onClick={() => handleDateChange('next')}>
             Next Week
             <ChevronRightIcon className="w-5 h-5" />
           </button>
@@ -270,23 +278,21 @@ const MealPlanner = () => {
                 {mealType}
               </div>
             ))}
-            <div className="meal-header enhanced-meal-header">Nutrition</div>
+            <div className="nutrition-header">Nutrition</div>
           </div>
-          {days.map((day, index) => {
-            const weekDate = getWeekDates()[index];
-            const isToday = weekDate.getTime() === todayDate.getTime();
+          {weekDates.map((date, index) => {
             return (
-              <div key={day} className="day-row enhanced-day-row">
-                <div className={`day-cell${isToday ? ' today' : ''} enhanced-day-cell`}>
-                  <div className="day-date">{formatDate(weekDate)}</div>
+              <div key={date} className="day-row enhanced-day-row">
+                <div className={`day-cell${isToday(date) ? ' today' : ''} enhanced-day-cell`}>
+                  <div className="day-date">{formatDisplayDate(date)}</div>
                 </div>
                 {mealTypes.map(mealType => (
-                  <div key={`${day}-${mealType}`} className="meal-cell enhanced-meal-cell">
-                    {renderMealSlot(day, mealType)}
+                  <div key={`${date}-${mealType}`} className="meal-cell enhanced-meal-cell">
+                    {renderMealSlot(date, mealType)}
                   </div>
                 ))}
                 <div className="nutrition-cell enhanced-nutrition-cell">
-                  {renderNutritionSummary(day)}
+                  {renderNutritionSummary(date)}
                 </div>
               </div>
             );

@@ -1,269 +1,238 @@
-import React, { useState, useEffect } from 'react';
-import { ChartBarIcon, CalendarIcon, FireIcon, ScaleIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon, BeakerIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { useRecoilState } from 'recoil';
-import { mealPlanState, currentWeekState } from '../recoil/atoms';
+import React, { useState, useEffect, useRef } from 'react';
+import { useRecoilValue } from 'recoil';
+import { mealPlanState, currentWeekState, getWeekDates } from '../recoil/atoms';
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import './Dashboard.css';
 
-function Dashboard() {
-  const [selectedTimeframe, setSelectedTimeframe] = useState('week');
-  const [mealPlan, setMealPlan] = useRecoilState(mealPlanState);
-  const [currentWeek] = useRecoilState(currentWeekState);
-  const [recentMeals, setRecentMeals] = useState([]);
-  const [upcomingMeals, setUpcomingMeals] = useState([]);
-  const [stats, setStats] = useState({
-    calories: {
-      current: 0,
-      goal: 2000,
-      trend: 'down',
-      change: 0
+const Dashboard = () => {
+  const mealPlan = useRecoilValue(mealPlanState);
+  const currentWeek = useRecoilValue(currentWeekState);
+  const weekDates = getWeekDates(new Date(currentWeek));
+
+  // State for selected day
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const datePickerRef = useRef(null);
+
+  const [dashboardStats, setDashboardStats] = useState({
+    totalMeals: 0,
+    totalCalories: 0,
+    nutritionTotals: {
+      protein: 0,
+      carbs: 0,
+      fat: 0
     },
-    protein: {
-      current: 0,
-      goal: 140,
-      trend: 'up',
-      change: 0
-    },
-    weight: {
-      current: 75.5,
-      goal: 72,
-      trend: 'down',
-      change: 0.5
-    },
-    water: {
-      current: 2.5,
-      goal: 3,
-      trend: 'up',
-      change: 0.3
-    }
+    recentMeals: []
   });
 
   useEffect(() => {
-    updateMealsAndStats(mealPlan);
-  }, [mealPlan]);
+    calculateDashboardStats();
+  }, [mealPlan, selectedDate]);
 
-  const updateMealsAndStats = (plan) => {
-    const today = new Date();
-    const recent = [];
-    const upcoming = [];
-    let totalCalories = 0;
-    let totalProtein = 0;
-
-    // Process all meals in the plan
-    Object.entries(plan).forEach(([day, meals]) => {
-      Object.entries(meals).forEach(([mealType, recipes]) => {
-        recipes.forEach(recipe => {
-          const mealDate = new Date(recipe.addedAt);
-          const mealData = {
-            id: `${day}-${mealType}-${recipe.id}`,
-            name: recipe.name,
-            time: `${day} ${mealType}`,
-            calories: recipe.calories,
-            protein: recipe.protein || 0,
-            carbs: recipe.carbs || 0,
-            fats: recipe.fat || 0
-          };
-
-          // Add to recent or upcoming based on date
-          if (mealDate <= today) {
-            recent.push(mealData);
-            totalCalories += recipe.calories;
-            totalProtein += recipe.protein || 0;
+  // Close date picker on outside click
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
+        setShowDatePicker(false);
+      }
+    }
+    if (showDatePicker) {
+      document.addEventListener('mousedown', handleClickOutside);
           } else {
-            upcoming.push(mealData);
-          }
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDatePicker]);
+
+  const calculateDashboardStats = () => {
+    const stats = {
+      totalMeals: 0,
+      totalCalories: 0,
+      nutritionTotals: {
+        protein: 0,
+        carbs: 0,
+        fat: 0
+      },
+      recentMeals: []
+    };
+    if (mealPlan[selectedDate]) {
+      Object.entries(mealPlan[selectedDate]).forEach(([mealType, meals]) => {
+        stats.totalMeals += meals.length;
+        meals.forEach(meal => {
+          stats.totalCalories += Number(meal.calories) || 0;
+          stats.nutritionTotals.protein += Number(meal.protein) || 0;
+          stats.nutritionTotals.carbs += Number(meal.carbs) || 0;
+          stats.nutritionTotals.fat += Number(meal.fat) || 0;
+          stats.recentMeals.push({ ...meal, mealType });
         });
       });
-    });
-
-    // Sort meals by time
-    recent.sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt));
-    upcoming.sort((a, b) => new Date(a.addedAt) - new Date(b.addedAt));
-
-    // Update state
-    setRecentMeals(recent.slice(0, 2));
-    setUpcomingMeals(upcoming.slice(0, 2));
-
-    // Update stats
-    setStats(prevStats => ({
-      ...prevStats,
-      calories: {
-        ...prevStats.calories,
-        current: totalCalories,
-        change: totalCalories - prevStats.calories.current
-      },
-      protein: {
-        ...prevStats.protein,
-        current: totalProtein,
-        change: totalProtein - prevStats.protein.current
-      }
-    }));
-  };
-
-  const getTrendIcon = (trend) => {
-    return trend === 'up' ? (
-      <ArrowTrendingUpIcon className="icon text-green-500" />
-    ) : (
-      <ArrowTrendingDownIcon className="icon text-red-500" />
-    );
-  };
-
-  const removeMeal = (mealId) => {
-    // Parse the mealId to get day, mealType, and recipeId
-    const [day, mealType, recipeId] = mealId.split('-');
-    
-    // Create a new meal plan object
-    const updatedMealPlan = { ...mealPlan };
-    
-    // Remove the specific recipe from the meal plan
-    if (updatedMealPlan[day] && updatedMealPlan[day][mealType]) {
-      updatedMealPlan[day][mealType] = updatedMealPlan[day][mealType].filter(
-        recipe => recipe.id !== parseInt(recipeId)
-      );
-      
-      // If no recipes left for this meal type, remove the meal type
-      if (updatedMealPlan[day][mealType].length === 0) {
-        delete updatedMealPlan[day][mealType];
-      }
-      
-      // If no meal types left for this day, remove the day
-      if (Object.keys(updatedMealPlan[day]).length === 0) {
-        delete updatedMealPlan[day];
-      }
-      
-      // Update Recoil state
-      setMealPlan(updatedMealPlan);
-      
-      // Save to session storage
-      sessionStorage.setItem('mealPlan-' + currentWeek, JSON.stringify(updatedMealPlan));
     }
+    stats.recentMeals.sort((a, b) => {
+      const mealOrder = { 'Breakfast': 1, 'Lunch': 2, 'Dinner': 3, 'Snacks': 4 };
+      return mealOrder[a.mealType] - mealOrder[b.mealType];
+    });
+    setDashboardStats(stats);
   };
+
+  const getMealTime = (mealType) => {
+    const times = {
+      'Breakfast': '8:00 AM',
+      'Lunch': '12:00 PM',
+      'Dinner': '6:00 PM',
+      'Snacks': '3:00 PM'
+    };
+    return times[mealType] || '12:00 PM';
+  };
+
+  const formatMealDate = (date) => {
+    return new Date(date).toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  // Navigation for previous/next day
+  const handlePrevDay = () => {
+    const prev = new Date(selectedDate);
+    prev.setDate(prev.getDate() - 1);
+    setSelectedDate(prev.toISOString().split('T')[0]);
+  };
+  const handleNextDay = () => {
+    const next = new Date(selectedDate);
+    next.setDate(next.getDate() + 1);
+    setSelectedDate(next.toISOString().split('T')[0]);
+  };
+
+  // Check if there is any nutrition data
+  const hasNutritionData = dashboardStats.nutritionTotals.protein > 0 || dashboardStats.nutritionTotals.carbs > 0 || dashboardStats.nutritionTotals.fat > 0;
+  const nutritionTotal = dashboardStats.nutritionTotals.protein + dashboardStats.nutritionTotals.carbs + dashboardStats.nutritionTotals.fat;
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-          <p className="text-gray-600">Track your nutrition and fitness progress</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <CalendarIcon className="icon text-primary-2" />
-          <select 
-            className="input bg-white"
-            value={selectedTimeframe}
-            onChange={(e) => setSelectedTimeframe(e.target.value)}
-          >
-            <option value="day">Today</option>
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {Object.entries(stats).map(([key, value]) => (
-          <div key={key} className="card">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                {key === 'calories' && <FireIcon className="icon text-primary-2" />}
-                {key === 'protein' && <ScaleIcon className="icon text-primary-2" />}
-                {key === 'weight' && <ChartBarIcon className="icon text-primary-2" />}
-                {key === 'water' && <BeakerIcon className="icon text-primary-2" />}
-                <h3 className="font-medium text-gray-700 capitalize">{key}</h3>
-              </div>
-              {getTrendIcon(value.trend)}
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between items-end">
-                <p className="text-2xl font-bold text-gray-800">
-                  {value.current}
-                  {key === 'weight' ? ' kg' : key === 'water' ? ' L' : ''}
-                </p>
-                <p className={`text-sm ${value.trend === 'up' ? 'text-green-500' : 'text-red-500'}`}>
-                  {value.trend === 'up' ? '+' : '-'}{Math.abs(value.change)}
-                </p>
-              </div>
-              <div className="w-full bg-gray-100 rounded-full h-2">
-                <div 
-                  className="h-2 rounded-full bg-primary-2"
-                  style={{ width: `${Math.min(100, (value.current / value.goal) * 100)}%` }}
-                ></div>
-              </div>
-              <p className="text-sm text-gray-600">
-                Goal: {value.goal}{key === 'weight' ? ' kg' : key === 'water' ? ' L' : ''}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card">
-          <h2 className="text-lg font-semibold mb-4">Recent Meals</h2>
-          <div className="space-y-4">
-            {recentMeals.length > 0 ? (
-              recentMeals.map((meal) => (
-                <div key={meal.id} className="relative flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <button
-                    onClick={() => removeMeal(meal.id)}
-                    className="absolute top-2 right-2 p-1 text-gray-400 hover:text-red-500 transition-colors"
-                    aria-label="Remove meal"
-                  >
-                    <XMarkIcon className="w-5 h-5" />
-                  </button>
-                  <div>
-                    <p className="font-medium text-gray-800">{meal.name}</p>
-                    <p className="text-sm text-gray-600">{meal.time}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-gray-800">{meal.calories} kcal</p>
-                    <p className="text-sm text-gray-600">
-                      P: {meal.protein}g C: {meal.carbs}g F: {meal.fats}g
-                    </p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center text-gray-500 py-4">
-                No recent meals recorded
+    <div className="dashboard-page">
+      <div className="page-background"/>
+      <div className="dashboard-content-wrapper">
+        <div className="page-header">
+          <h1>Daily Summary</h1>
+          <div className="date-navigation static-width">
+            <button className="button" onClick={handlePrevDay} title="Previous Day"><ChevronLeftIcon width={20} /></button>
+            <span className="date-display" onClick={() => setShowDatePicker(true)} style={{ cursor: 'pointer', minWidth: 200, textAlign: 'center' }}>
+              {formatMealDate(selectedDate)}
+            </span>
+            <button className="button" onClick={handleNextDay} title="Next Day"><ChevronRightIcon width={20} /></button>
+            {showDatePicker && (
+              <div className="datepicker-popover" ref={datePickerRef}>
+                <DatePicker
+                  selected={new Date(selectedDate)}
+                  onChange={date => {
+                    setSelectedDate(date.toISOString().split('T')[0]);
+                    setShowDatePicker(false);
+                  }}
+                  inline
+                  calendarClassName="dashboard-datepicker"
+                />
               </div>
             )}
           </div>
-        </div>
-
-        <div className="card">
-          <h2 className="text-lg font-semibold mb-4">Upcoming Meals</h2>
-          <div className="space-y-4">
-            {upcomingMeals.length > 0 ? (
-              upcomingMeals.map((meal) => (
-                <div key={meal.id} className="relative flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <button
-                    onClick={() => removeMeal(meal.id)}
-                    className="absolute top-2 right-2 p-1 text-gray-400 hover:text-red-500 transition-colors"
-                    aria-label="Remove meal"
-                  >
-                    <XMarkIcon className="w-5 h-5" />
-                  </button>
-                  <div>
-                    <p className="font-medium text-gray-800">{meal.name}</p>
-                    <p className="text-sm text-gray-600">{meal.time}</p>
+            </div>
+        <div className="dashboard-grid">
+          <div className="dashboard-card summary-stats">
+            <h2>Daily Summary</h2>
+            <div className="summary-stats">
+              <div className="stat-item">
+                <span className="stat-value">{dashboardStats.totalMeals}</span>
+                <span className="stat-label">Total Meals</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value">{Math.round(dashboardStats.totalCalories)}</span>
+                <span className="stat-label">Total Calories</span>
+              </div>
+            </div>
+          </div>
+          <div className="dashboard-card nutrition-overview">
+            <h2>Nutrition Overview</h2>
+            {hasNutritionData && nutritionTotal > 0 && (
+              <>
+                <div className="nutrition-chart">
+                  <div className="chart-bar">
+                    <div 
+                      className="chart-segment protein" 
+                      style={{ width: `${(dashboardStats.nutritionTotals.protein / nutritionTotal) * 100}%` }}
+                    />
+                    <div 
+                      className="chart-segment carbs" 
+                      style={{ width: `${(dashboardStats.nutritionTotals.carbs / nutritionTotal) * 100}%` }}
+                    />
+                    <div 
+                      className="chart-segment fat" 
+                      style={{ width: `${(dashboardStats.nutritionTotals.fat / nutritionTotal) * 100}%` }}
+                    />
                   </div>
-                  <div className="text-right">
-                    <p className="font-medium text-gray-800">{meal.calories} kcal</p>
-                    <p className="text-sm text-gray-600">
-                      P: {meal.protein}g C: {meal.carbs}g F: {meal.fats}g
-                    </p>
+                  <div className="chart-legend">
+                    <div className="legend-item">
+                      <div className="legend-color protein" />
+                      <span>Protein</span>
+                    </div>
+                    <div className="legend-item">
+                      <div className="legend-color carbs" />
+                      <span>Carbs</span>
+                    </div>
+                    <div className="legend-item">
+                      <div className="legend-color fat" />
+                      <span>Fat</span>
+                    </div>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="text-center text-gray-500 py-4">
-                No upcoming meals planned
-              </div>
+              </>
             )}
+            <div className="nutrition-totals centered-totals">
+              <div className="total-item">
+                <span className="total-label">Protein</span>
+                <span className="total-value">{Math.round(dashboardStats.nutritionTotals.protein)}g</span>
+              </div>
+              <div className="total-item">
+                <span className="total-label">Carbs</span>
+                <span className="total-value">{Math.round(dashboardStats.nutritionTotals.carbs)}g</span>
+              </div>
+              <div className="total-item">
+                <span className="total-label">Fat</span>
+                <span className="total-value">{Math.round(dashboardStats.nutritionTotals.fat)}g</span>
+              </div>
+            </div>
+          </div>
+          <div className="dashboard-card recent-meals">
+            <h2>Today's Meals</h2>
+            <div className="meals-list">
+              {dashboardStats.recentMeals.map((meal, index) => (
+                <div key={index} className="meal-item">
+                  <div className="meal-info">
+                    <h3>{meal.name}</h3>
+                  </div>
+                  <div className="meal-time">
+                    <span className="meal-type">{meal.mealType}</span>
+                    <span className="meal-nutrition">{meal.calories} cal</span>
+                  </div>
+                </div>
+              ))}
+              {dashboardStats.recentMeals.length === 0 && (
+                <div className="empty-state">
+                  <p>No meals planned for this day</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default Dashboard; 

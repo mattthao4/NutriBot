@@ -79,15 +79,24 @@ function App() {
                 </ProtectedRoute>
               } 
             />
-            <Route 
-              path="/recipes" 
-              element={
-                <ProtectedRoute>
-                  <Recipes />
-                </ProtectedRoute>
-              <Route path="/recipe-details/:recipeId" element={<RecipeDetails />} />
-              } 
-            />
+            <Route path="/recipes">
+              <Route
+                index
+                element={
+                  <ProtectedRoute>
+                    <Recipes />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path=":recipeId"
+                element={
+                  <ProtectedRoute>
+                    <RecipeDetails />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
             <Route 
               path="/shopping-list" 
               element={

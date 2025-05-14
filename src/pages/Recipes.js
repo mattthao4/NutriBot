@@ -33,22 +33,21 @@ const Recipes = () => {
   const handleRecipeSelect = (recipe) => {
     if (selectedMealSlot) {
       try {
-        // Get the current meal plan for the selected week
-        const weekKey = selectedMealSlot.week;
+        // Get the current meal plan
         const currentMealPlan = JSON.parse(JSON.stringify(mealPlan));
 
-        // Initialize the day if it doesn't exist
-        if (!currentMealPlan[selectedMealSlot.day]) {
-          currentMealPlan[selectedMealSlot.day] = {};
+        // Initialize the date if it doesn't exist
+        if (!currentMealPlan[selectedMealSlot.date]) {
+          currentMealPlan[selectedMealSlot.date] = {};
         }
 
         // Initialize the meal type if it doesn't exist
-        if (!currentMealPlan[selectedMealSlot.day][selectedMealSlot.mealType]) {
-          currentMealPlan[selectedMealSlot.day][selectedMealSlot.mealType] = [];
+        if (!currentMealPlan[selectedMealSlot.date][selectedMealSlot.mealType]) {
+          currentMealPlan[selectedMealSlot.date][selectedMealSlot.mealType] = [];
         }
 
         // Add the recipe to the meal plan
-        currentMealPlan[selectedMealSlot.day][selectedMealSlot.mealType].push({
+        currentMealPlan[selectedMealSlot.date][selectedMealSlot.mealType].push({
           ...recipe,
           addedAt: new Date().toISOString(),
           // Flatten macros for compatibility
@@ -75,6 +74,9 @@ const Recipes = () => {
       } catch (error) {
         console.error('Error saving recipe to meal plan:', error);
       }
+    } else {
+      // If no meal slot is selected, navigate to recipe details
+      navigate(`/recipes/${recipe.id}`);
     }
   };
 
@@ -90,15 +92,8 @@ const Recipes = () => {
   const formatMealSlotInfo = (mealSlot) => {
     if (!mealSlot) return '';
     
-    // Parse the week key to get the date
-    const weekDate = new Date(mealSlot.week);
-    const dayIndex = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].indexOf(mealSlot.day);
-    
-    // Add the day offset to get the correct date
-    const mealDate = new Date(weekDate);
-    mealDate.setDate(weekDate.getDate() + dayIndex);
-    
-    return `${mealSlot.mealType} for ${mealDate.toLocaleDateString('en-US', {
+    const date = new Date(mealSlot.date);
+    return `${mealSlot.mealType} for ${date.toLocaleDateString('en-US', {
       weekday: 'long',
       month: 'long',
       day: 'numeric',
@@ -110,10 +105,10 @@ const Recipes = () => {
     if (!mealPlan || !selectedMealSlot) return null;
     
     const addedMealTypes = new Set();
-    // Only check the selected day
-    const selectedDay = selectedMealSlot.day;
-    if (mealPlan[selectedDay]) {
-      Object.entries(mealPlan[selectedDay]).forEach(([mealType, recipes]) => {
+    // Only check the selected date
+    const selectedDate = selectedMealSlot.date;
+    if (mealPlan[selectedDate]) {
+      Object.entries(mealPlan[selectedDate]).forEach(([mealType, recipes]) => {
         if (recipes.some(r => r.id === recipeId)) {
           addedMealTypes.add(mealType);
         }
@@ -147,14 +142,14 @@ const Recipes = () => {
   return (
     <div className="recipes-page">
       <div className="page-background" />
-      <div className="page-content-wrapper">
+      <div className="recipes-content-wrapper">
         <div className="page-header">
           <div>
             <h1>Recipes</h1>
             {selectedMealSlot && (
-              <p className="meal-slot-info">
+              <h2>
                 Selecting {formatMealSlotInfo(selectedMealSlot)}
-              </p>
+              </h2>
             )}
           </div>
           <div className="search-container">
@@ -219,10 +214,13 @@ const Recipes = () => {
           {filteredRecipes.map(recipe => (
             <div 
               key={recipe.id}
-              onClick={() => navigate("/recipe-details/" + recipe.id)}
               className="recipe-card"
             >
-              <div className="recipe-image" style={{ backgroundImage: `url(${recipe.image})` }} />
+              <div 
+                className="recipe-image" 
+                style={{ backgroundImage: `url(${recipe.image})` }}
+                onClick={() => navigate(`/recipes/${recipe.id}`)}
+              />
               <div className="recipe-content">
                 <div className="recipe-header">
                   <h3>{recipe.name}</h3>
@@ -248,7 +246,7 @@ const Recipes = () => {
                 <div className="recipe-actions">
                   <button 
                     className="button button-primary"
-                    onClick={() => navigate("/recipe-details/" + recipe.id)}
+                    onClick={() => navigate(`/recipes/${recipe.id}`)}
                   >
                     View recipe
                   </button>

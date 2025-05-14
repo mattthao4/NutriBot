@@ -30,8 +30,15 @@ body {
 
 /* Header */
 .header {
-  background-color: var(--primary-1);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  height: 4rem;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  width: 100%;
 }
 
 .header-content {
@@ -234,6 +241,21 @@ body {
 }
 
 .main-container.with-header {
-  padding-top: 4rem; /* Height of the header */
-  min-height: calc(100vh - 4rem);
-} 
+  padding-top: 5rem; /* Increased from 4rem to account for header height plus spacing */
+  min-height: calc(100vh - 5rem);
+}
+
+.page-content-wrapper {
+  width: 100vw;
+  min-width: 0;
+  margin: 0 auto;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  margin-top: 1rem;
+  backdrop-filter: blur(10px);
+  overflow-x: auto;
+}
+
+/* Removed .meal-planner-grid and .enhanced-meal-planner-grid rules. Use MealPlanner.css for these styles. */ 

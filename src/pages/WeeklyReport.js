@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useRecoilState } from 'recoil';
-import { mealPlanState, currentWeekState, formatDate } from '../recoil/atoms';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
-import { Pie } from 'react-chartjs-2';
+import { mealPlanState, currentWeekState, formatDate, formatDisplayDate, getWeekDates } from '../recoil/atoms';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
+import { Pie, Bar } from 'react-chartjs-2';
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import '../styles/theme.css';
 import './WeeklyReport.css';
 import { CalendarIcon, ChartBarIcon, ArrowTrendingUpIcon, FireIcon, ScaleIcon, BeakerIcon } from '@heroicons/react/24/outline';
 
-ChartJS.register(ArcElement, Tooltip, Legend);
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
 const WeeklyReport = () => {
   const [selectedWeek, setSelectedWeek] = useState(0);
@@ -27,6 +28,18 @@ const WeeklyReport = () => {
     mealTypeBreakdown: {}
   });
   const [mealTypeStats, setMealTypeStats] = useState({});
+
+  const weekDates = getWeekDates(new Date(currentWeek));
+
+  const handleDateChange = (direction) => {
+    const newDate = new Date(currentWeek);
+    if (direction === 'next') {
+      newDate.setDate(newDate.getDate() + 7);
+    } else {
+      newDate.setDate(newDate.getDate() - 7);
+    }
+    setCurrentWeek(newDate.toISOString());
+  };
 
   const weeks = [
     {
@@ -69,23 +82,14 @@ const WeeklyReport = () => {
   // Initialize currentWeek if it's undefined
   useEffect(() => {
     if (!currentWeek) {
-      const defaultWeek = {
-        startDate: new Date().toISOString(),
-        progress: {
-          weight: { current: 0, goal: 0 },
-          bodyFat: { current: 0, goal: 0 },
-          waterIntake: { average: 0, goal: 0 }
-        },
-        achievements: [],
-        improvements: []
-      };
-      setCurrentWeek(defaultWeek);
+      const defaultWeek = new Date();
+      setCurrentWeek(defaultWeek.toISOString());
     }
   }, [currentWeek, setCurrentWeek]);
 
   useEffect(() => {
     calculateNutritionData(mealPlan);
-  }, [mealPlan]);
+  }, [mealPlan, currentWeek]);
 
   useEffect(() => {
     // Set up storage event listener
@@ -107,13 +111,18 @@ const WeeklyReport = () => {
 
     const dailyTotals = {};
     const mealTypeTotals = {
-      breakfast: { calories: 0, protein: 0, carbs: 0, fat: 0 },
-      lunch: { calories: 0, protein: 0, carbs: 0, fat: 0 },
-      dinner: { calories: 0, protein: 0, carbs: 0, fat: 0 }
+      breakfast: { calories: 0, protein: 0, carbs: 0, fat: 0, count: 0 },
+      lunch: { calories: 0, protein: 0, carbs: 0, fat: 0, count: 0 },
+      dinner: { calories: 0, protein: 0, carbs: 0, fat: 0, count: 0 }
     };
 
-    // Process all meals in the plan
+    // Get the current week's dates
+    const currentWeekDates = getWeekDates(new Date(currentWeek));
+
+    // Process all meals in the plan for the current week only
     Object.entries(plan).forEach(([day, meals]) => {
+      // Skip if the day is not in the current week
+      if (!currentWeekDates.includes(day)) return;
       if (!meals) return;
       
       dailyTotals[day] = { calories: 0, protein: 0, carbs: 0, fat: 0 };
@@ -145,6 +154,7 @@ const WeeklyReport = () => {
             mealTypeTotals[normalizedMealType].protein += protein;
             mealTypeTotals[normalizedMealType].carbs += carbs;
             mealTypeTotals[normalizedMealType].fat += fat;
+            mealTypeTotals[normalizedMealType].count += 1;
           }
         });
       });
@@ -188,12 +198,12 @@ const WeeklyReport = () => {
 
   const getMealTypeColor = (mealType) => {
     const colors = {
-      'Breakfast': '#FFD166',
-      'Lunch': '#06D6A0',
-      'Dinner': '#118AB2',
-      'Snacks': '#EF476F'
+      'breakfast': '#FFD166',
+      'lunch': '#06D6A0',
+      'dinner': '#118AB2',
+      'snacks': '#EF476F'
     };
-    return colors[mealType] || '#6C757D';
+    return colors[mealType.toLowerCase()] || '#6C757D';
   };
 
   // Safely extract progress data with fallback values
@@ -237,6 +247,105 @@ const WeeklyReport = () => {
     }
   };
 
+  const getTimeSeriesData = () => {
+    const weekDates = getWeekDates(new Date(currentWeek));
+    const dailyData = weekDates.map(date => {
+      const dayMeals = mealPlan[date] || {};
+      const totals = {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0
+      };
+
+      Object.values(dayMeals).forEach(recipes => {
+        recipes.forEach(recipe => {
+          if (!recipe) return;
+          totals.calories += Number(recipe.calories || 0);
+          totals.protein += Number(recipe.protein || recipe.nutrition?.protein?.replace('g', '') || 0);
+          totals.carbs += Number(recipe.carbs || recipe.nutrition?.carbs?.replace('g', '') || 0);
+          totals.fat += Number(recipe.fat || recipe.nutrition?.fat?.replace('g', '') || 0);
+        });
+      });
+
+      return totals;
+    });
+
+    return {
+      labels: weekDates.map(date => formatDisplayDate(date)),
+      datasets: [
+        {
+          label: 'Calories',
+          data: dailyData.map(day => day.calories),
+          backgroundColor: 'rgba(255, 107, 107, 0.8)',
+          borderColor: 'rgba(255, 107, 107, 1)',
+          borderWidth: 1
+        },
+        {
+          label: 'Protein (g)',
+          data: dailyData.map(day => day.protein),
+          backgroundColor: 'rgba(78, 205, 196, 0.8)',
+          borderColor: 'rgba(78, 205, 196, 1)',
+          borderWidth: 1
+        },
+        {
+          label: 'Carbs (g)',
+          data: dailyData.map(day => day.carbs),
+          backgroundColor: 'rgba(255, 209, 102, 0.8)',
+          borderColor: 'rgba(255, 209, 102, 1)',
+          borderWidth: 1
+        },
+        {
+          label: 'Fat (g)',
+          data: dailyData.map(day => day.fat),
+          backgroundColor: 'rgba(6, 214, 160, 0.8)',
+          borderColor: 'rgba(6, 214, 160, 1)',
+          borderWidth: 1
+        }
+      ]
+    };
+  };
+
+  const timeSeriesOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: 'Daily Nutrition Values'
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(0,0,0,0.05)',
+          lineWidth: 1
+        },
+        ticks: {
+          callback: function(value) {
+            return value.toLocaleString();
+          }
+        }
+      },
+      x: {
+        grid: {
+          color: 'rgba(0,0,0,0.03)',
+          lineWidth: 1
+        },
+        ticks: {
+          maxRotation: 45,
+          minRotation: 45
+        }
+      }
+    },
+    barPercentage: 0.7,
+    categoryPercentage: 0.7
+  };
+
   return (
     <div className="weekly-report-page">
       <div className="page-background" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1490645930917-897ecb06fdf4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')" }} />
@@ -244,8 +353,18 @@ const WeeklyReport = () => {
         <div className="page-header">
           <div className="title-section">
             <h1>Weekly Report</h1>
-            <div className="date-range">
-              {formatDate(new Date(currentWeek))} - {formatDate(new Date(new Date(currentWeek).setDate(new Date(currentWeek).getDate() + 6)))}
+            <div className="week-navigation">
+              <button className="button button-secondary" onClick={() => handleDateChange('prev')}>
+                <ChevronLeftIcon className="w-5 h-5" />
+                Previous Week
+              </button>
+              <div className="date-range">
+                {formatDisplayDate(weekDates[0])} - {formatDisplayDate(weekDates[6])}
+              </div>
+              <button className="button button-secondary" onClick={() => handleDateChange('next')}>
+                Next Week
+                <ChevronRightIcon className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>
@@ -318,7 +437,9 @@ const WeeklyReport = () => {
                   className="bar-fill protein"
                   style={{ width: `${(nutritionData.dailyAverages.protein / 140) * 100}%` }}
                 >
-                  <span className="bar-value">{nutritionData.dailyAverages.protein}g</span>
+                  {nutritionData.dailyAverages.protein > 0 && (
+                    <span className="bar-value">{nutritionData.dailyAverages.protein}g</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -329,7 +450,9 @@ const WeeklyReport = () => {
                   className="bar-fill carbs"
                   style={{ width: `${(nutritionData.dailyAverages.carbs / 250) * 100}%` }}
                 >
-                  <span className="bar-value">{nutritionData.dailyAverages.carbs}g</span>
+                  {nutritionData.dailyAverages.carbs > 0 && (
+                    <span className="bar-value">{nutritionData.dailyAverages.carbs}g</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -340,7 +463,9 @@ const WeeklyReport = () => {
                   className="bar-fill fat"
                   style={{ width: `${(nutritionData.dailyAverages.fat / 65) * 100}%` }}
                 >
-                  <span className="bar-value">{nutritionData.dailyAverages.fat}g</span>
+                  {nutritionData.dailyAverages.fat > 0 && (
+                    <span className="bar-value">{nutritionData.dailyAverages.fat}g</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -350,79 +475,40 @@ const WeeklyReport = () => {
         <div className="meal-type-chart">
           <h3>Meals by Type</h3>
           <div className="meal-type-bars">
-            {Object.entries(mealTypeStats).map(([mealType, stats]) => (
-              <div key={mealType} className="meal-type-bar">
-                <div className="bar-label">{mealType}</div>
-                <div className="bar-container">
-                  <div 
-                    className="bar-fill"
-                    style={{ 
-                      width: `${(stats.calories / Math.max(...Object.values(mealTypeStats).map(s => s.calories))) * 100}%`,
-                      backgroundColor: getMealTypeColor(mealType)
-                    }}
-                  >
-                    <span className="bar-value">{stats.calories} calories</span>
+            {Object.entries(mealTypeStats).map(([mealType, stats]) => {
+              const totalCalories = Object.values(mealTypeStats).reduce((sum, type) => sum + type.calories, 0);
+              const percentage = totalCalories > 0 ? (stats.calories / totalCalories) * 100 : 0;
+              const hasData = stats.calories > 0;
+              
+              return (
+                <div key={mealType} className="meal-type-bar">
+                  <div className="bar-label">
+                    {mealType.charAt(0).toUpperCase() + mealType.slice(1)}
+                    {hasData && <span className="meal-count"> ({stats.count} meals)</span>}
+                  </div>
+                  <div className="bar-container">
+                    <div 
+                      className="bar-fill"
+                      style={{ 
+                        width: hasData ? `${percentage}%` : '0%',
+                        backgroundColor: getMealTypeColor(mealType)
+                      }}
+                    >
+                      {hasData && (
+                        <span className="bar-value">{stats.calories} calories</span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
-        <div className="space-y-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">Weekly Report</h1>
-              <p className="text-gray-600">Track your nutrition and fitness progress</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <CalendarIcon className="icon text-primary-2" />
-              <select 
-                className="input bg-white"
-                value={selectedWeek}
-                onChange={(e) => setSelectedWeek(Number(e.target.value))}
-              >
-                {weeks.map((week, index) => (
-                  <option key={week.id} value={index}>
-                    {new Date(week.startDate).toLocaleDateString()} - {new Date(week.endDate).toLocaleDateString()}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="card">
-              <div className="flex items-center gap-2 mb-4">
-                <ChartBarIcon className="icon text-primary-2" />
-                <h2 className="text-lg font-semibold">Nutrition Summary</h2>
-              </div>
-              <div className="space-y-4">
-                {Object.entries(nutritionData.dailyAverages).map(([key, value]) => (
-                  <div key={key} className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="capitalize font-medium text-gray-700">{key}</span>
-                      <span className="font-medium">
-                        {value}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2.5">
-                      <div 
-                        className={`h-2.5 rounded-full ${getProgressColor(value, nutritionData.dailyAverages[key])}`}
-                        style={{ width: `${Math.min(100, (value / nutritionData.dailyAverages[key]) * 100)}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="flex items-center gap-2 mb-4">
-                <ArrowTrendingUpIcon className="icon text-primary-2" />
-                <h2 className="text-lg font-semibold">Progress</h2>
-              </div>
-            </div>
+        <div className="time-series-chart">
+          <h3>Daily Nutrition Values</h3>
+          <div className="chart-container">
+            <Bar data={getTimeSeriesData()} options={timeSeriesOptions} />
           </div>
         </div>
       </div>

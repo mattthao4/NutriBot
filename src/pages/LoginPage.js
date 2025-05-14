@@ -32,7 +32,7 @@ const LoginPage = () => {
         // The 'hasCompletedOnboarding' flag will be set at the END of the full onboarding process.
         navigate('/onboarding/goals'); 
       } else {
-        navigate('/dashboard');
+        navigate('/');
       }
     } else {
       setError('Invalid username or password.');

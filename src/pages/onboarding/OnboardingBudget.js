@@ -49,7 +49,7 @@ const OnboardingBudget = () => {
       // localStorage.removeItem('currentWeek'); // Or let atom effects handle it
       // localStorage.removeItem('mealPlan');
 
-      navigate('/dashboard');
+      navigate('/');
     } else {
       alert('Please complete all budget preferences.');
     }

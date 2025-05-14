@@ -1,62 +1,53 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useRecoilState } from 'recoil';
-import { mealPlanState, selectedMealSlotState, getMealPlanKey, formatDate } from '../recoil/atoms';
+import { mealPlanState, selectedMealSlotState } from '../recoil/atoms';
 import '../styles/theme.css';
 import './RecipeDetails.css';
 import recipes from '../data/recipes';
 
 const RecipeDetails = () => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDiet, setSelectedDiet] = useState('all');
-  const [selectedTime, setSelectedTime] = useState('all');
-  const [selectedCalories, setSelectedCalories] = useState('all');
+  const { recipeId } = useParams();
   const [selectedMealSlot, setSelectedMealSlot] = useRecoilState(selectedMealSlotState);
   const [mealPlan, setMealPlan] = useRecoilState(mealPlanState);
 
-  const selectedRecipe = recipes[useParams().recipeId - 1];
+  // Find the recipe by ID
+  const selectedRecipe = recipes.find(recipe => recipe.id.toString() === recipeId);
 
-  useEffect(() => {
-    window.scrollTo(0, 0)
-    // Get the meal slot from localStorage
-    const savedMealSlot = JSON.parse(localStorage.getItem('selectedMealSlot') || 'null');
-    if (savedMealSlot) {
-      setSelectedMealSlot(savedMealSlot);
-    } else {
-      // If no meal slot is selected, redirect to meal planner
-      navigate('/meal-planner');
-    }
-  }, [navigate, setSelectedMealSlot]);
+  // If recipe not found, redirect to recipes page
+  if (!selectedRecipe) {
+    navigate('/recipes');
+    return null;
+  }
 
-  const handleRecipeSelect = (recipe) => {
+  const handleRecipeSelect = () => {
     if (selectedMealSlot) {
       try {
         // Get the current meal plan for the selected week
-        const weekKey = selectedMealSlot.week;
         const currentMealPlan = JSON.parse(JSON.stringify(mealPlan));
 
-        // Initialize the day if it doesn't exist
-        if (!currentMealPlan[selectedMealSlot.day]) {
-          currentMealPlan[selectedMealSlot.day] = {};
+        // Initialize the date if it doesn't exist
+        if (!currentMealPlan[selectedMealSlot.date]) {
+          currentMealPlan[selectedMealSlot.date] = {};
         }
 
         // Initialize the meal type if it doesn't exist
-        if (!currentMealPlan[selectedMealSlot.day][selectedMealSlot.mealType]) {
-          currentMealPlan[selectedMealSlot.day][selectedMealSlot.mealType] = [];
+        if (!currentMealPlan[selectedMealSlot.date][selectedMealSlot.mealType]) {
+          currentMealPlan[selectedMealSlot.date][selectedMealSlot.mealType] = [];
         }
 
         // Add the recipe to the meal plan
-        currentMealPlan[selectedMealSlot.day][selectedMealSlot.mealType].push({
-          ...recipe,
+        currentMealPlan[selectedMealSlot.date][selectedMealSlot.mealType].push({
+          ...selectedRecipe,
           addedAt: new Date().toISOString(),
           // Flatten macros for compatibility
-          protein: recipe.nutrition?.protein ? parseInt(recipe.nutrition.protein) : 0,
-          carbs: recipe.nutrition?.carbs ? parseInt(recipe.nutrition.carbs) : 0,
-          fat: recipe.nutrition?.fat ? parseInt(recipe.nutrition.fat) : 0,
+          protein: selectedRecipe.nutrition?.protein ? parseInt(selectedRecipe.nutrition.protein) : 0,
+          carbs: selectedRecipe.nutrition?.carbs ? parseInt(selectedRecipe.nutrition.carbs) : 0,
+          fat: selectedRecipe.nutrition?.fat ? parseInt(selectedRecipe.nutrition.fat) : 0,
           // Normalize ingredients to objects with a name property
-          ingredients: Array.isArray(recipe.ingredients)
-            ? recipe.ingredients.map(ing =>
+          ingredients: Array.isArray(selectedRecipe.ingredients)
+            ? selectedRecipe.ingredients.map(ing =>
                 typeof ing === 'string' ? { name: ing } : ing
               )
             : [],
@@ -74,17 +65,20 @@ const RecipeDetails = () => {
       } catch (error) {
         console.error('Error saving recipe to meal plan:', error);
       }
+    } else {
+      // If no meal slot is selected, navigate to meal planner to select a slot
+      navigate('/meal-planner');
     }
   };
 
   return (
     <div className="recipe-details-page">
       <div className="page-background" />
-      <div className="page-content-wrapper">
+      <div className="recipe-details-content-wrapper">
         <div className="recipe-details-header">
           <div className="recipe-details-image" style={{ backgroundImage: `url(${selectedRecipe.image})` }} />
           <div className="recipe-info">
-            <h1 className="recipe-title">{ selectedRecipe.name }</h1>
+            <h1 className="recipe-title">{selectedRecipe.name}</h1>
             <span>
               <span className="icon">⚖️</span>
               {selectedRecipe.calories} cal
@@ -98,28 +92,28 @@ const RecipeDetails = () => {
               <div className="nutrition-grid">
                 <div className="nutrition-item">
                   <span className="label">Protein</span>
-                  <span className="value">{selectedRecipe.nutrition.protein}</span>
+                  <span className="value">{selectedRecipe.nutrition.protein}g</span>
                 </div>
                 <div className="nutrition-item">
                   <span className="label">Carbs</span>
-                  <span className="value">{selectedRecipe.nutrition.carbs}</span>
+                  <span className="value">{selectedRecipe.nutrition.carbs}g</span>
                 </div>
                 <div className="nutrition-item">
                   <span className="label">Fat</span>
-                  <span className="value">{selectedRecipe.nutrition.fat}</span>
+                  <span className="value">{selectedRecipe.nutrition.fat}g</span>
                 </div>
                 <div className="nutrition-item">
                   <span className="label">Fiber</span>
-                  <span className="value">{selectedRecipe.nutrition.fiber}</span>
+                  <span className="value">{selectedRecipe.nutrition.fiber}g</span>
                 </div>
               </div>
             </div>
             <button
               className="button"
-              onClick={() => handleRecipeSelect(selectedRecipe)}
+              onClick={handleRecipeSelect}
             >
               <span className="icon">➕</span>
-              Add to Plan
+              {selectedMealSlot ? 'Add to Plan' : 'Select Meal Slot'}
             </button>
           </div>
         </div>
@@ -132,6 +126,16 @@ const RecipeDetails = () => {
               ))}
             </ul>
           </div>
+          {selectedRecipe.instructions && (
+            <div className="recipe-instructions">
+              <h4>Instructions:</h4>
+              <ol>
+                {selectedRecipe.instructions.map((instruction, index) => (
+                  <li key={index}>{instruction}</li>
+                ))}
+              </ol>
+            </div>
+          )}
         </div>
       </div>
     </div>

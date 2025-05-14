@@ -78,13 +78,16 @@
 }
 
 .page-content-wrapper {
-  max-width: 1400px;
+  width: 100vw;
+  min-width: 0;
   margin: 0 auto;
   background-color: rgba(255, 255, 255, 0.95);
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   padding: 2rem;
+  margin-top: 1rem;
   backdrop-filter: blur(10px);
+  overflow-x: auto;
 }
 
 .page-header {
@@ -379,105 +382,4 @@
   background: #f8d7da;
   border-color: #f5c2c7;
   box-shadow: 0 2px 8px rgba(220,53,69,0.12);
-}
-
-/* Enhanced Meal Planner Styles */
-.enhanced-meal-planner-grid {
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 2rem 0;
-  font-size: 1.1rem;
-}
-.enhanced-grid-header {
-  font-size: 1.2rem;
-  height: 64px;
-}
-.enhanced-meal-header {
-  padding: 0.5rem 0;
-}
-.enhanced-day-row {
-  min-height: 120px;
-  height: 140px;
-}
-.enhanced-day-cell {
-  min-width: 180px;
-  font-size: 1.1rem;
-  padding: 1.2rem 0.5rem;
-}
-.enhanced-meal-cell {
-  min-width: 220px;
-  padding: 0.5rem 0.5rem;
-}
-.enhanced-nutrition-cell {
-  min-width: 180px;
-  font-size: 1rem;
-  padding: 0.5rem 0.5rem;
-}
-.enhanced-meal-item {
-  background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-  padding: 1.1rem 1.1rem 1.1rem 1.1rem;
-  margin-bottom: 0.5rem;
-  min-height: 90px;
-  position: relative;
-}
-.enhanced-meal-item-image {
-  width: 64px;
-  height: 64px;
-  border-radius: 12px;
-  background-size: cover;
-  background-position: center;
-  flex-shrink: 0;
-}
-.enhanced-meal-item-info {
-  flex: 1;
-  min-width: 0;
-  font-size: 1.1rem;
-  padding-right: 0;
-}
-.enhanced-x-btn {
-  top: 10px !important;
-  right: 10px !important;
-  width: 28px !important;
-  height: 28px !important;
-  z-index: 3;
-  background: #fff;
-  border: 1.5px solid #e0e0e0;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-}
-.enhanced-x-btn:hover {
-  background: #f8d7da;
-  border-color: #f5c2c7;
-}
-@media (max-width: 1100px) {
-  .enhanced-meal-planner-grid {
-    font-size: 1rem;
-  }
-  .enhanced-meal-cell, .enhanced-day-cell, .enhanced-nutrition-cell {
-    min-width: 120px;
-    padding: 0.3rem;
-  }
-  .enhanced-meal-item-image {
-    width: 48px;
-    height: 48px;
-  }
-}
-@media (max-width: 700px) {
-  .enhanced-meal-planner-grid {
-    font-size: 0.95rem;
-    padding: 0.5rem 0;
-  }
-  .enhanced-meal-item {
-    padding: 0.5rem;
-    min-height: 60px;
-  }
-  .enhanced-meal-item-image {
-    width: 36px;
-    height: 36px;
-  }
 } 
