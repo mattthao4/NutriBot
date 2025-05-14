@@ -123,27 +123,11 @@ const Dashboard = () => {
         <div className="page-header">
           <div className="title-section">
             <h1>Dashboard</h1>
-            <p className="subtitle">Welcome to your nutrition dashboard. Here you can track your progress and view your meal plans.</p>
           </div>
-          <div className="date-navigation static-width">
-            <button className="button" onClick={handlePrevDay} title="Previous Day"><ChevronLeftIcon width={20} /></button>
-            <span className="date-display" onClick={() => setShowDatePicker(true)} style={{ cursor: 'pointer', minWidth: 200, textAlign: 'center' }}>
-              {formatMealDate(selectedDate)}
-            </span>
-            <button className="button" onClick={handleNextDay} title="Next Day"><ChevronRightIcon width={20} /></button>
-            {showDatePicker && (
-              <div className="datepicker-popover" ref={datePickerRef}>
-                <DatePicker
-                  selected={new Date(selectedDate)}
-                  onChange={date => {
-                    setSelectedDate(date.toISOString().split('T')[0]);
-                    setShowDatePicker(false);
-                  }}
-                  inline
-                  calendarClassName="dashboard-datepicker"
-                />
-              </div>
-            )}
+          <div className="week-navigation">
+            <button className="button button-secondary" onClick={handlePrevDay} title="Previous Week"><ChevronLeftIcon width={20} /> Previous Week</button>
+            <h2>{formatMealDate(selectedDate)}</h2>
+            <button className="button button-secondary" onClick={handleNextDay} title="Next Week">Next Week <ChevronRightIcon width={20} /></button>
           </div>
         </div>
         <div className="dashboard-grid">

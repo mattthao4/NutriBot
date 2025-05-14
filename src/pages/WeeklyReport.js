@@ -349,7 +349,7 @@ const WeeklyReport = () => {
   return (
     <div className="weekly-report-page">
       <div className="page-background" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1490645930917-897ecb06fdf4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')" }} />
-      <div className="page-content-wrapper">
+      <div className="weekly-report-content-wrapper">
         <div className="page-header">
           <div className="title-section">
             <h1>Weekly Report</h1>

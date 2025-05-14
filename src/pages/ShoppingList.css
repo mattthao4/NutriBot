@@ -463,6 +463,31 @@
   font-weight: 600;
 }
 
+.shopping-list-content-wrapper {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.week-navigation .button {
+  background: var(--background-secondary);
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: var(--primary-2);
+  font-size: 1rem;
+  box-shadow: none;
+  margin: 0 0.5rem;
+}
+
+.week-navigation .button:hover {
+  background: var(--primary-1);
+  color: #fff;
+}
+
 @media (max-width: 768px) {
   .shopping-list-page {
     padding: 1rem;

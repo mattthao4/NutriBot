@@ -68,13 +68,18 @@
 }
 
 .nav-link:hover {
-  color: var(--primary-1);
-  background-color: rgba(123, 208, 212, 0.1);
+  color: var(--accent-2, #F9CF6A);
+  background-color: rgba(249, 207, 106, 0.1);
 }
 
 .nav-link.active {
-  color: var(--primary-1);
-  background-color: rgba(123, 208, 212, 0.1);
+  color: var(--accent-2, #F9CF6A);
+  background-color: rgba(249, 207, 106, 0.1);
+}
+
+.nav-link.active:hover {
+  color: var(--accent-2, #F9CF6A);
+  background-color: rgba(249, 207, 106, 0.2);
 }
 
 .header-actions {
@@ -97,8 +102,8 @@
 }
 
 .btn:hover {
-  color: var(--primary-1);
-  background-color: rgba(123, 208, 212, 0.1);
+  color: var(--accent-2, #F9CF6A);
+  background-color: rgba(249, 207, 106, 0.1);
 }
 
 .icon {

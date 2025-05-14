@@ -17,7 +17,7 @@
   z-index: -1;
 }
 
-.page-content-wrapper {
+.weekly-report-content-wrapper {
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
@@ -45,7 +45,7 @@
   margin: 0;
 }
 
-.week-navigation {
+.weekly-report-content-wrapper .week-navigation {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -55,12 +55,12 @@
   border-radius: 0.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 1200px;
+  max-width: 100%;
   margin-left: auto;
   margin-right: auto;
 }
 
-.week-navigation h2 {
+.weekly-report-content-wrapper .week-navigation h2 {
   margin: 0;
   font-size: 1.25rem;
   color: var(--primary-1);
@@ -68,27 +68,22 @@
   text-align: center;
 }
 
-.button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
+.weekly-report-content-wrapper .week-navigation .button {
+  background: var(--background-secondary);
   border: none;
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.75rem;
   cursor: pointer;
+  transition: background 0.2s;
+  color: var(--primary-2);
+  font-size: 1rem;
+  box-shadow: none;
+  margin: 0 0.5rem;
 }
 
-.button-secondary {
-  background-color: #e2e8f0;
-  color: #1a1a1a;
-  min-width: 140px;
-  justify-content: center;
-}
-
-.button-secondary:hover {
-  background-color: #cbd5e1;
+.weekly-report-content-wrapper .week-navigation .button:hover {
+  background: var(--primary-1);
+  color: #fff;
 }
 
 .stats-grid {
@@ -278,7 +273,7 @@
 }
 
 @media (max-width: 1024px) {
-  .page-content-wrapper {
+  .weekly-report-content-wrapper {
     min-width: auto;
     width: 100%;
     padding: 1rem;
@@ -298,7 +293,7 @@
     padding: 0.5rem;
   }
 
-  .page-content-wrapper {
+  .weekly-report-content-wrapper {
     padding: 0.5rem;
   }
 
@@ -364,7 +359,7 @@
     padding: 0.25rem;
   }
 
-  .page-content-wrapper {
+  .weekly-report-content-wrapper {
     padding: 0.25rem;
   }
 

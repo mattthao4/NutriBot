@@ -135,7 +135,7 @@
 
 .button-primary {
   background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-  color: white;
+  color: #000;
   border-color: var(--primary-dark);
 }
 

@@ -209,137 +209,140 @@ const ShoppingList = () => {
   };
 
   return (
-    <div className="shopping-list-container">
-      <div className="page-header">
-        <div className="title-section">
-          <h1>Shopping List</h1>
-          <span className="total-items">
-            {shoppingList.length} {shoppingList.length === 1 ? 'item' : 'items'}
-          </span>
-        </div>
-        <div className="week-navigation">
-          <button className="button button-secondary" onClick={() => handleDateChange('prev')}>
-            <ChevronLeftIcon className="w-5 h-5" />
-            Previous Week
-          </button>
-          <h2>
-            {viewMode === 'weekly' 
-              ? `${formatDisplayDate(weekStart)} - ${formatDisplayDate(weekEnd)}`
-              : selectedDay 
-                ? formatDisplayDate(new Date(selectedDay))
-                : 'Select a day'}
-          </h2>
-          <button className="button button-secondary" onClick={() => handleDateChange('next')}>
-            Next Week
-            <ChevronRightIcon className="w-5 h-5" />
-          </button>
-        </div>
-        <div className="view-toggle">
-          <button 
-            className={`toggle-button ${viewMode === 'weekly' ? 'active' : ''}`}
-            onClick={() => {
-              setViewMode('weekly');
-              setSelectedDay(null);
-            }}
-          >
-            Weekly
-          </button>
-          <button 
-            className={`toggle-button ${viewMode === 'daily' ? 'active' : ''}`}
-            onClick={() => {
-              setViewMode('daily');
-              // When switching to daily view, select the first day of the current week
-              const weekStartDate = new Date(currentWeek);
-              weekStartDate.setDate(weekStartDate.getDate() - weekStartDate.getDay());
-              setSelectedDay(formatDate(weekStartDate));
-            }}
-          >
-            Daily
-          </button>
-        </div>
-        {viewMode === 'daily' && (
-          <div className="day-selector">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => {
-              const isSelected = selectedDay ? new Date(selectedDay).getDay() === index : false;
-              return (
-                <button
-                  key={day}
-                  className={`day-button ${isSelected ? 'active' : ''}`}
-                  onClick={() => {
-                    // Find the same day of week in the selected week
-                    const selectedDate = new Date(selectedDay || weekStart);
-                    const daysToAdd = index - selectedDate.getDay();
-                    const newDate = new Date(selectedDate);
-                    newDate.setDate(selectedDate.getDate() + daysToAdd);
-                    setSelectedDay(formatDate(newDate));
-                  }}
-                >
-                  {day}
-                </button>
-              );
-            })}
+    <div className="shopping-list-page">
+      <div className="page-background" />
+      <div className="shopping-list-content-wrapper">
+        <div className="page-header">
+          <div className="title-section">
+            <h1>Shopping List</h1>
+            <span className="total-items">
+              {shoppingList.length} {shoppingList.length === 1 ? 'item' : 'items'}
+            </span>
           </div>
-        )}
-      </div>
-
-      <div className="shopping-list-grid">
-        <div className="shopping-list-column">
-          <h2>To Buy</h2>
-          <div className="shopping-list">
-            {shoppingList
-              .filter(item => !checkedItems[item.name])
-              .map((item, index) => (
-                <div key={index} className="shopping-item">
-                  <div className="item-content">
-                    <input
-                      type="checkbox"
-                      checked={checkedItems[item.name] || false}
-                      onChange={() => handleCheckItem(item.name)}
-                      className="item-checkbox"
-                    />
-                    <span className="item-name">{item.name}</span>
-                    <span className="item-quantity">
-                      {item.quantity} {item.unit}
-                    </span>
-                  </div>
-                  <button 
-                    onClick={() => handleRemoveItem(item.name)}
-                    className="remove-button"
+          <div className="week-navigation">
+            <button className="button button-secondary" onClick={() => handleDateChange('prev')}>
+              <ChevronLeftIcon className="w-5 h-5" />
+              Previous Week
+            </button>
+            <h2>
+              {viewMode === 'weekly' 
+                ? `${formatDisplayDate(weekStart)} - ${formatDisplayDate(weekEnd)}`
+                : selectedDay 
+                  ? formatDisplayDate(new Date(selectedDay))
+                  : 'Select a day'}
+            </h2>
+            <button className="button button-secondary" onClick={() => handleDateChange('next')}>
+              Next Week
+              <ChevronRightIcon className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="view-toggle">
+            <button 
+              className={`toggle-button ${viewMode === 'weekly' ? 'active' : ''}`}
+              onClick={() => {
+                setViewMode('weekly');
+                setSelectedDay(null);
+              }}
+            >
+              Weekly
+            </button>
+            <button 
+              className={`toggle-button ${viewMode === 'daily' ? 'active' : ''}`}
+              onClick={() => {
+                setViewMode('daily');
+                // When switching to daily view, select the first day of the current week
+                const weekStartDate = new Date(currentWeek);
+                weekStartDate.setDate(weekStartDate.getDate() - weekStartDate.getDay());
+                setSelectedDay(formatDate(weekStartDate));
+              }}
+            >
+              Daily
+            </button>
+          </div>
+          {viewMode === 'daily' && (
+            <div className="day-selector">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => {
+                const isSelected = selectedDay ? new Date(selectedDay).getDay() === index : false;
+                return (
+                  <button
+                    key={day}
+                    className={`day-button ${isSelected ? 'active' : ''}`}
+                    onClick={() => {
+                      // Find the same day of week in the selected week
+                      const selectedDate = new Date(selectedDay || weekStart);
+                      const daysToAdd = index - selectedDate.getDay();
+                      const newDate = new Date(selectedDate);
+                      newDate.setDate(selectedDate.getDate() + daysToAdd);
+                      setSelectedDay(formatDate(newDate));
+                    }}
                   >
-                    ×
+                    {day}
                   </button>
-                </div>
-              ))}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        <div className="shopping-list-column">
-          <h2>Done</h2>
-          <div className="shopping-list done-list">
-            {shoppingList
-              .filter(item => checkedItems[item.name])
-              .map((item, index) => (
-                <div key={index} className="shopping-item done-item">
-                  <div className="item-content">
-                    <input
-                      type="checkbox"
-                      checked={checkedItems[item.name] || false}
-                      onChange={() => handleCheckItem(item.name)}
-                      className="item-checkbox"
-                    />
-                    <span className="item-name">{item.name}</span>
-                    <span className="item-quantity">
-                      {item.quantity} {item.unit}
-                    </span>
+        <div className="shopping-list-grid">
+          <div className="shopping-list-column">
+            <h2>To Buy</h2>
+            <div className="shopping-list">
+              {shoppingList
+                .filter(item => !checkedItems[item.name])
+                .map((item, index) => (
+                  <div key={index} className="shopping-item">
+                    <div className="item-content">
+                      <input
+                        type="checkbox"
+                        checked={checkedItems[item.name] || false}
+                        onChange={() => handleCheckItem(item.name)}
+                        className="item-checkbox"
+                      />
+                      <span className="item-name">{item.name}</span>
+                      <span className="item-quantity">
+                        {item.quantity} {item.unit}
+                      </span>
+                    </div>
+                    <button 
+                      onClick={() => handleRemoveItem(item.name)}
+                      className="remove-button"
+                    >
+                      ×
+                    </button>
                   </div>
-                  <button 
-                    onClick={() => handleRemoveItem(item.name)}
-                    className="remove-button"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
+                ))}
+            </div>
+          </div>
+
+          <div className="shopping-list-column">
+            <h2>Done</h2>
+            <div className="shopping-list done-list">
+              {shoppingList
+                .filter(item => checkedItems[item.name])
+                .map((item, index) => (
+                  <div key={index} className="shopping-item done-item">
+                    <div className="item-content">
+                      <input
+                        type="checkbox"
+                        checked={checkedItems[item.name] || false}
+                        onChange={() => handleCheckItem(item.name)}
+                        className="item-checkbox"
+                      />
+                      <span className="item-name">{item.name}</span>
+                      <span className="item-quantity">
+                        {item.quantity} {item.unit}
+                      </span>
+                    </div>
+                    <button 
+                      onClick={() => handleRemoveItem(item.name)}
+                      className="remove-button"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+            </div>
           </div>
         </div>
       </div>

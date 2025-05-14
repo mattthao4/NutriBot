@@ -173,16 +173,14 @@ const RecipeDetails = () => {
               ))}
             </ul>
           </div>
-          {selectedRecipe.instructions && (
-            <div className="recipe-instructions">
-              <h4>Instructions:</h4>
-              <ol>
-                {selectedRecipe.instructions.map((instruction, index) => (
-                  <li key={index}>{instruction}</li>
-                ))}
-              </ol>
-            </div>
-          )}
+          <div className="recipe-instructions">
+            <h4>Instructions:</h4>
+            <ol>
+              {selectedRecipe.instructions.map((instruction, index) => (
+                <li key={index}>{instruction}</li>
+              ))}
+            </ol>
+          </div>
         </div>
       </div>
     </div>

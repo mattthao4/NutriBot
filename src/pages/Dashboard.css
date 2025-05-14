@@ -545,4 +545,8 @@
   margin: 0;
   max-width: 600px;
   line-height: 1.5;
+}
+
+.page-content-wrapper {
+  background-color: white;
 } 

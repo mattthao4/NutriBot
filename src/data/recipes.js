@@ -14,7 +14,13 @@ const recipes = [
         carbs: '35g',
         fat: '20g',
         fiber: '8g'
-      }
+      },
+      instructions: [
+        'Toast the bread until golden brown.',
+        'Mash the avocado in a bowl and season with salt and pepper.',
+        'Spread the mashed avocado on the toast.',
+        'Top with a poached egg if desired.'
+      ]
     },
     {
       id: 2,
@@ -31,7 +37,13 @@ const recipes = [
         carbs: '15g',
         fat: '18g',
         fiber: '6g'
-      }
+      },
+      instructions: [
+        'Dice the cucumber and tomatoes.',
+        'Combine the diced vegetables in a bowl.',
+        'Add crumbled feta and olives.',
+        'Drizzle with olive oil and toss to combine.'
+      ]
     },
     {
       id: 3,
@@ -48,7 +60,13 @@ const recipes = [
         carbs: '5g',
         fat: '28g',
         fiber: '2g'
-      }
+      },
+      instructions: [
+        'Preheat the grill to medium-high heat.',
+        'Season the salmon with salt, pepper, and dill.',
+        'Grill the salmon for about 4-5 minutes on each side.',
+        'Squeeze lemon juice over the top before serving.'
+      ]
     },
     {
       id: 4,
@@ -65,7 +83,13 @@ const recipes = [
         carbs: '45g',
         fat: '18g',
         fiber: '12g'
-      }
+      },
+      instructions: [
+        'Cook quinoa according to package instructions.',
+        'Drain and rinse chickpeas.',
+        'Dice avocado, cucumber, and tomatoes.',
+        'Combine all ingredients in a bowl and squeeze lemon juice over the top.'
+      ]
     },
     {
       id: 5,
@@ -82,7 +106,14 @@ const recipes = [
         carbs: '60g',
         fat: '12g',
         fiber: '10g'
-      }
+      },
+      instructions: [
+        'Cook quinoa according to package instructions.',
+        'Roast sweet potato cubes until tender.',
+        'Drain and rinse chickpeas.',
+        'Combine quinoa, sweet potato, chickpeas, and spinach in a bowl.',
+        'Drizzle with tahini sauce.'
+      ]
     },
     {
       id: 6,
@@ -99,7 +130,13 @@ const recipes = [
         carbs: '10g',
         fat: '20g',
         fiber: '3g'
-      }
+      },
+      instructions: [
+        'Grill or pan-sear the chicken breast until fully cooked.',
+        'Chop the romaine lettuce into bite-sized pieces.',
+        'Combine the lettuce, chicken, parmesan, and croutons in a bowl.',
+        'Drizzle with Caesar dressing and toss to combine.'
+      ]
     },
     {
       id: 7,
@@ -116,7 +153,13 @@ const recipes = [
         carbs: '2g',
         fat: '8g',
         fiber: '1g'
-      }
+      },
+      instructions: [
+        'Preheat the oven to 350°F (175°C).',
+        'Whisk eggs in a bowl and season with salt and pepper.',
+        'Add chopped spinach, bell pepper, and cheese to the egg mixture.',
+        'Pour the mixture into muffin tins and bake for 20-25 minutes.'
+      ]
     },
     {
       id: 8,
@@ -133,7 +176,13 @@ const recipes = [
         carbs: '50g',
         fat: '5g',
         fiber: '14g'
-      }
+      },
+      instructions: [
+        'Sauté onions and bell peppers until softened.',
+        'Add beans, tomatoes, and corn to the pot.',
+        'Simmer for 30 minutes, stirring occasionally.',
+        'Season with salt, pepper, and chili powder to taste.'
+      ]
     },
     {
       id: 9,
@@ -150,7 +199,13 @@ const recipes = [
         carbs: '28g',
         fat: '6g',
         fiber: '3g'
-      }
+      },
+      instructions: [
+        'Blend dates in a food processor until smooth.',
+        'Mix oats, almonds, peanut butter, and maple syrup in a bowl.',
+        'Press the mixture into a lined baking dish.',
+        'Refrigerate for at least 1 hour before cutting into bars.'
+      ]
     }
 ];
 
