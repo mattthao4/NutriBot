@@ -31,9 +31,14 @@
 }
 
 .login-logo {
-  width: 60px; /* Adjust as needed */
-  height: auto;
+  width: 80px; /* Increased size for better visibility */
+  height: 80px; /* Fixed height to maintain aspect ratio */
   margin-bottom: 20px;
+  transition: transform 0.3s ease;
+}
+
+.login-logo:hover {
+  transform: scale(1.05);
 }
 
 .login-header h2 {

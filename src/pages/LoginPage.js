@@ -43,8 +43,7 @@ const LoginPage = () => {
     <div className="login-page-container">
       <div className="login-form-card">
         <div className="login-header">
-          {/* You can add a logo or icon here if desired, similar to onboarding */}
-          <img src="/nutribot-logo-placeholder.png" alt="NutriBot Logo" className="login-logo" />
+          <img src="/favicon.svg" alt="NutriBot Logo" className="login-logo" />
           <h2>Welcome Back!</h2>
           <p>Please login to continue to NutriBot.</p>
         </div>
