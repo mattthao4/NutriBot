@@ -49,7 +49,11 @@ const OnboardingSchedule = () => {
   };
 
   const handleNext = () => {
-    if (onboardingData.mealsPerDay && onboardingData.mealPrepFrequency && onboardingData.cookingTimePerDay !== null) {
+    if (onboardingData.mealsPerDay && onboardingData.mealPrepFrequency) {
+      if (onboardingData.cookingTimePerDay === null) {
+        // Set a default value of 30
+        setOnboardingData(prev => ({ ...prev, cookingTimePerDay: 30 }));
+      }
       navigate('/onboarding/budget');
     } else {
       alert('Please complete all schedule preferences.');
@@ -120,8 +124,8 @@ const OnboardingSchedule = () => {
             <span key={mark.value} style={{ flex: 1, textAlign: 'center' }}>{mark.label}</span>
           ))}
         </div>
-        {onboardingData.cookingTimePerDay && 
-          <p className="slider-current-value">Selected: {onboardingData.cookingTimePerDay}{onboardingData.cookingTimePerDay === 60 ? '+' : ''} min</p>
+        { 
+          <p className="slider-current-value">Selected: {onboardingData.cookingTimePerDay || 30}{onboardingData.cookingTimePerDay === 60 ? '+' : ''} min</p>
         }
       </div>
 
