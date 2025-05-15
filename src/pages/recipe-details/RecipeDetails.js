@@ -54,6 +54,8 @@ const RecipeDetails = () => {
   const handleRecipeSelect = () => {
     if (selectedMealSlot) {
       try {
+        console.log('RecipeDetails: Starting to add meal', { recipe: selectedRecipe, slot: selectedMealSlot });
+        
         // Get the current meal plan for the selected week
         const currentMealPlan = JSON.parse(JSON.stringify(mealPlan));
 
@@ -85,6 +87,15 @@ const RecipeDetails = () => {
 
         // Update the meal plan state
         setMealPlan(currentMealPlan);
+
+        // Store notification in localStorage
+        const notificationData = {
+          recipe: selectedRecipe,
+          mealType: selectedMealSlot.mealType,
+          date: selectedMealSlot.date
+        };
+        console.log('RecipeDetails: Storing notification in localStorage', notificationData);
+        localStorage.setItem('mealNotification', JSON.stringify(notificationData));
 
         // Clear the selected meal slot
         localStorage.removeItem('selectedMealSlot');

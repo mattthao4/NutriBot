@@ -11,19 +11,49 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { XMarkIcon, PlusIcon, QuestionMarkCircleIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
-import { currentWeekState, mealPlanState, getMealPlanKey, formatDate, selectedMealSlotState, getWeekDates } from '../../recoil/atoms';
+import { currentWeekState, mealPlanState, getMealPlanKey, formatDate, selectedMealSlotState, getWeekDates, mealNotificationState } from '../../recoil/atoms';
 import '../../styles/theme.css';
 import './MealPlanner.css';
+import MealNotification from '../../components/MealNotification';
 
 const MealPlanner = () => {
   const navigate = useNavigate();
   const [currentWeek, setCurrentWeek] = useRecoilState(currentWeekState);
   const [mealPlan, setMealPlan] = useRecoilState(mealPlanState);
   const [selectedMealSlot, setSelectedMealSlot] = useRecoilState(selectedMealSlotState);
+  const [mealNotification, setMealNotification] = useRecoilState(mealNotificationState);
   const [showHelp, setShowHelp] = useState(false);
 
   const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
   const weekDates = getWeekDates(new Date(currentWeek));
+
+  // Check for notifications in localStorage when component mounts or when currentWeek changes
+  useEffect(() => {
+    console.log('MealPlanner: Checking for notifications');
+    const storedNotification = localStorage.getItem('mealNotification');
+    console.log('MealPlanner: Raw stored notification from localStorage', storedNotification);
+    
+    if (storedNotification) {
+      try {
+        const notification = JSON.parse(storedNotification);
+        console.log('MealPlanner: Parsed notification data', notification);
+        console.log('MealPlanner: Setting notification state', notification);
+        setMealNotification(notification);
+        // Clear the stored notification
+        console.log('MealPlanner: Clearing stored notification from localStorage');
+        localStorage.removeItem('mealNotification');
+      } catch (error) {
+        console.error('MealPlanner: Error parsing stored notification:', error);
+      }
+    } else {
+      console.log('MealPlanner: No notification found in localStorage');
+    }
+  }, [setMealNotification, currentWeek]);
+
+  // Log when notification state changes
+  useEffect(() => {
+    console.log('MealPlanner: Notification state changed', mealNotification);
+  }, [mealNotification]);
 
   const handleDateChange = (direction) => {
     const newDate = new Date(currentWeek);
@@ -79,6 +109,7 @@ const MealPlanner = () => {
     e.stopPropagation();
     const updatedMealPlan = JSON.parse(JSON.stringify(mealPlan));
     if (updatedMealPlan[day] && updatedMealPlan[day][mealType]) {
+      const removedMeal = updatedMealPlan[day][mealType][recipeIndex];
       updatedMealPlan[day][mealType].splice(recipeIndex, 1);
       if (updatedMealPlan[day][mealType].length === 0) {
         delete updatedMealPlan[day][mealType];
@@ -87,6 +118,37 @@ const MealPlanner = () => {
         delete updatedMealPlan[day];
       }
       setMealPlan(updatedMealPlan);
+
+      // Show notification for removed meal
+      const notification = {
+        message: `You removed ${removedMeal.name} for ${mealType} on ${formatDisplayDate(day)}. Would you like to undo?`,
+        type: 'remove',
+        mealData: {
+          day,
+          mealType,
+          recipe: removedMeal,
+          index: recipeIndex
+        }
+      };
+      setMealNotification(notification);
+    }
+  };
+
+  const handleUndoRemove = () => {
+    if (mealNotification?.type === 'remove' && mealNotification?.mealData) {
+      const { day, mealType, recipe, index } = mealNotification.mealData;
+      const updatedMealPlan = JSON.parse(JSON.stringify(mealPlan));
+      
+      if (!updatedMealPlan[day]) {
+        updatedMealPlan[day] = {};
+      }
+      if (!updatedMealPlan[day][mealType]) {
+        updatedMealPlan[day][mealType] = [];
+      }
+      
+      updatedMealPlan[day][mealType].splice(index, 0, recipe);
+      setMealPlan(updatedMealPlan);
+      setMealNotification(null);
     }
   };
 
@@ -312,6 +374,13 @@ const MealPlanner = () => {
         </div>
       </div>
       {renderHelpSection()}
+      {mealNotification && (
+        <MealNotification
+          message={mealNotification.message}
+          onClose={() => setMealNotification(null)}
+          onUndo={mealNotification.type === 'remove' ? handleUndoRemove : undefined}
+        />
+      )}
     </div>
   );
 };

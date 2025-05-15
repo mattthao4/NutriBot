@@ -127,4 +127,9 @@ export const getMealPlanKey = (date) => {
   const monday = new Date(date);
   monday.setDate(monday.getDate() - monday.getDay() + 1);
   return monday.toISOString().slice(0, 10);
-}; 
+};
+
+export const mealNotificationState = atom({
+  key: 'mealNotificationState',
+  default: null,
+}); 
