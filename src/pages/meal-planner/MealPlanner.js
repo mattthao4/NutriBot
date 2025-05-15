@@ -191,8 +191,21 @@ const MealPlanner = () => {
     }
     // If decreasing servings, remove one copy
     else if (change < 0) {
-      updatedMealPlan[day][mealType].splice(recipeIndex, 1);
+      // Find the last instance of this meal and remove it
+      const lastIndex = updatedMealPlan[day][mealType].findLastIndex(
+        meal => meal.name === recipe.name
+      );
+      if (lastIndex !== -1) {
+        updatedMealPlan[day][mealType].splice(lastIndex, 1);
+      }
     }
+    
+    // Update all instances of this meal to have the same servings count
+    updatedMealPlan[day][mealType].forEach(meal => {
+      if (meal.name === recipe.name) {
+        meal.servings = recipe.servings;
+      }
+    });
     
     setMealPlan(updatedMealPlan);
   };
@@ -212,7 +225,7 @@ const MealPlanner = () => {
       // Add back the correct number of servings
       for (let i = 0; i < servings; i++) {
         const mealCopy = { ...recipe };
-        mealCopy.servings = 1; // Each copy has 1 serving
+        mealCopy.servings = servings; // Set the servings count for all copies
         updatedMealPlan[day][mealType].push(mealCopy);
       }
       

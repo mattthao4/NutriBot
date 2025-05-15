@@ -136,6 +136,12 @@ const RecipeDetails = () => {
               <span className="icon">⏱️</span>
               {selectedRecipe.prepTime}
             </span>
+            {selectedRecipe.allergens && selectedRecipe.allergens.length > 0 && (
+              <div className="allergen-warning">
+                <span className="icon">⚠️</span>
+                <span>Contains: {selectedRecipe.allergens.join(', ')}</span>
+              </div>
+            )}
             <div className="recipe-nutrition">
               <h4>Nutrition per serving:</h4>
               <div className="nutrition-grid">

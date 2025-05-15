@@ -60,22 +60,31 @@ const Recipes = () => {
   const cookTimes = ['all', 'quick', 'medium', 'long'];
   const calorieRanges = ['all', 'low', 'medium', 'high'];
 
+  // Helper: get price category
+  const getPriceCategory = (price) => {
+    if (price < 10) return '$';
+    if (price < 25) return '$$';
+    return '$$$';
+  };
+
   // Helper: check if recipe is recommended for user
   const isRecipeRecommended = (recipe) => {
     if (!onboardingData) return false;
+    
     // 1. Diet type must match (unless 'noRestrictions')
     if (onboardingData.dietType && onboardingData.dietType !== 'noRestrictions') {
       if (recipe.diet !== onboardingData.dietType) return false;
     }
+    
     // 2. Exclude if any allergen is present
     if (onboardingData.allergies && onboardingData.allergies.length > 0) {
       const recipeIngredients = recipe.ingredients.map(ing => (typeof ing === 'string' ? ing.toLowerCase() : ing.name.toLowerCase()));
       const hasAllergen = onboardingData.allergies.some(allergy => recipeIngredients.includes(allergy.toLowerCase()));
       if (hasAllergen) return false;
     }
+    
     // 3. Cooking time must be at most user's preference (if set)
     if (onboardingData.cookingTimePerDay && recipe.prepTime) {
-      // Assume recipe.prepTime is a string like '30 min' or '1 hr'
       let recipeMinutes = 0;
       if (typeof recipe.prepTime === 'string') {
         const match = recipe.prepTime.match(/(\d+)\s*min/);
@@ -85,7 +94,24 @@ const Recipes = () => {
       }
       if (recipeMinutes > onboardingData.cookingTimePerDay) return false;
     }
+
+    // 4. Check if price fits within daily budget
+    if (onboardingData.weeklyGroceryBudget) {
+      const dailyBudget = onboardingData.weeklyGroceryBudget / 7;
+      if (recipe.pricePerServing > dailyBudget) return false;
+    }
+    
     return true;
+  };
+
+  // Helper: check if recipe contains user's allergens
+  const containsUserAllergens = (recipe) => {
+    if (!onboardingData || !onboardingData.allergies || !recipe.allergens) return false;
+    return recipe.allergens.some(allergen => 
+      onboardingData.allergies.some(userAllergy => 
+        userAllergy.toLowerCase() === allergen.toLowerCase()
+      )
+    );
   };
 
   const handleRecipeSelect = (recipe) => {
@@ -159,7 +185,13 @@ const Recipes = () => {
       return matchesSearch && matchesDiet && matchesTime && matchesCalories;
     })
     .sort((a, b) => {
-      // Sort recommended recipes to the top
+      // First, sort by recommendation status
+      const aNotRecommended = containsUserAllergens(a);
+      const bNotRecommended = containsUserAllergens(b);
+      if (aNotRecommended && !bNotRecommended) return 1;
+      if (!aNotRecommended && bNotRecommended) return -1;
+      
+      // Then, sort recommended recipes to the top
       const aRecommended = isRecipeRecommended(a);
       const bRecommended = isRecipeRecommended(b);
       if (aRecommended && !bRecommended) return -1;
@@ -326,8 +358,14 @@ const Recipes = () => {
                 <div className="recipe-header">
                   <h3>{recipe.name}</h3>
                   <div className="recipe-tags">
-                    {isRecipeRecommended(recipe) && (
+                    {!containsUserAllergens(recipe) && isRecipeRecommended(recipe) && (
                       <span className="recommended-label">Recommended</span>
+                    )}
+                    {containsUserAllergens(recipe) && (
+                      <span className="not-recommended-label">Not Recommended</span>
+                    )}
+                    {recipe.allergens && recipe.allergens.length > 0 && (
+                      <span className="allergen-label">⚠️ Contains: {recipe.allergens.join(', ')}</span>
                     )}
                     {getAddedMealTypes(recipe.id) && (
                       <span className="added-label">{getAddedMealTypes(recipe.id)}</span>
@@ -345,6 +383,10 @@ const Recipes = () => {
                   <span className="meta-item">
                     <span className="icon">⏱️</span>
                     {recipe.prepTime}
+                  </span>
+                  <span className="meta-item">
+                    <span className="icon">💰</span>
+                    {getPriceCategory(recipe.pricePerServing)}
                   </span>
                 </div>
                 <div className="recipe-actions">
