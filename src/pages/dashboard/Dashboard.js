@@ -151,9 +151,9 @@ const Dashboard = () => {
             <h1>Dashboard</h1>
           </div>
           <div className="week-navigation">
-            <button className="button button-secondary" onClick={handlePrevDay} title="Previous Week"><ChevronLeftIcon width={20} /> Previous Week</button>
+            <button className="button button-secondary" onClick={handlePrevDay} title="Previous Day"><ChevronLeftIcon width={20} /> Previous Day</button>
             <h2>{formatMealDate(selectedDate)}</h2>
-            <button className="button button-secondary" onClick={handleNextDay} title="Next Week">Next Week <ChevronRightIcon width={20} /></button>
+            <button className="button button-secondary" onClick={handleNextDay} title="Next Day">Next Day <ChevronRightIcon width={20} /></button>
           </div>
         </div>
         <div className="dashboard-grid">

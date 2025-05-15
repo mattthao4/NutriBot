@@ -13,7 +13,7 @@ const MealNotification = ({ message, recipe, mealType, date, onClose, onUndo }) 
     const timer = setTimeout(() => {
       console.log('MealNotification: Auto-clearing notification');
       onClose();
-    }, 10000); // Clear after 10 seconds
+    }, 30000); // Clear after 30 seconds
 
     return () => {
       console.log('MealNotification: Cleaning up auto-clear timer');

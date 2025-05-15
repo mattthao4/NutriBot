@@ -197,7 +197,7 @@ const MealPlanner = () => {
       );
       if (lastIndex !== -1) {
         updatedMealPlan[day][mealType].splice(lastIndex, 1);
-      }
+    }
     }
     
     // Update all instances of this meal to have the same servings count
