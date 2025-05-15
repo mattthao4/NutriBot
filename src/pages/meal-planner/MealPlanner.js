@@ -37,8 +37,18 @@ const MealPlanner = () => {
       try {
         const notification = JSON.parse(storedNotification);
         console.log('MealPlanner: Parsed notification data', notification);
-        console.log('MealPlanner: Setting notification state', notification);
-        setMealNotification(notification);
+        // Format the notification consistently
+        const formattedNotification = {
+          message: `You have added ${notification.recipe?.name || 'a meal'} to ${notification.mealType || 'your meal plan'} for ${formatDisplayDate(notification.date)}`,
+          type: 'add',
+          mealData: {
+            day: notification.date,
+            mealType: notification.mealType,
+            recipe: notification.recipe
+          }
+        };
+        console.log('MealPlanner: Setting notification state', formattedNotification);
+        setMealNotification(formattedNotification);
         // Clear the stored notification
         console.log('MealPlanner: Clearing stored notification from localStorage');
         localStorage.removeItem('mealNotification');
@@ -110,7 +120,16 @@ const MealPlanner = () => {
     const updatedMealPlan = JSON.parse(JSON.stringify(mealPlan));
     if (updatedMealPlan[day] && updatedMealPlan[day][mealType]) {
       const removedMeal = updatedMealPlan[day][mealType][recipeIndex];
-      updatedMealPlan[day][mealType].splice(recipeIndex, 1);
+      // Count how many instances of this meal exist before removing
+      const servings = updatedMealPlan[day][mealType].filter(
+        meal => meal.name === removedMeal.name
+      ).length;
+      
+      // Remove all instances of the same meal from this timeslot
+      updatedMealPlan[day][mealType] = updatedMealPlan[day][mealType].filter(
+        meal => meal.name !== removedMeal.name
+      );
+      
       if (updatedMealPlan[day][mealType].length === 0) {
         delete updatedMealPlan[day][mealType];
       }
@@ -119,24 +138,68 @@ const MealPlanner = () => {
       }
       setMealPlan(updatedMealPlan);
 
-      // Show notification for removed meal
+      // Show notification for removed meal with quantity
       const notification = {
-        message: `You removed ${removedMeal.name} for ${mealType} on ${formatDisplayDate(day)}. Would you like to undo?`,
+        message: `You removed (${servings}x) ${removedMeal.name} for ${mealType} on ${formatDisplayDate(day)}. Would you like to undo?`,
         type: 'remove',
         mealData: {
           day,
           mealType,
           recipe: removedMeal,
-          index: recipeIndex
+          index: recipeIndex,
+          servings
         }
       };
       setMealNotification(notification);
     }
   };
 
+  const handleServingChange = (e, day, mealType, recipeIndex, change) => {
+    e.stopPropagation();
+    const updatedMealPlan = JSON.parse(JSON.stringify(mealPlan));
+    const recipe = updatedMealPlan[day][mealType][recipeIndex];
+    
+    console.log('MealPlanner: handleServingChange called with:', {
+      day,
+      mealType,
+      recipeIndex,
+      change,
+      currentServings: recipe.servings
+    });
+    
+    // Initialize servings if not set
+    if (!recipe.servings) {
+      recipe.servings = 1;
+    }
+    
+    // If decreasing servings and it's the last one, use handleRemoveMeal to show notification
+    if (change === -1 && recipe.servings <= 1) {
+      console.log('MealPlanner: Decreasing servings to 0, removing meal');
+      handleRemoveMeal(e, day, mealType, recipeIndex);
+      return;
+    }
+
+    // Update servings count
+    recipe.servings += change;
+    console.log('MealPlanner: Updated servings to:', recipe.servings);
+    
+    // If increasing servings, add more copies of the meal
+    if (change > 0) {
+      const newMeal = { ...recipe };
+      newMeal.servings = 1; // Each new copy starts with 1 serving
+      updatedMealPlan[day][mealType].push(newMeal);
+    }
+    // If decreasing servings, remove one copy
+    else if (change < 0) {
+      updatedMealPlan[day][mealType].splice(recipeIndex, 1);
+    }
+    
+    setMealPlan(updatedMealPlan);
+  };
+
   const handleUndoRemove = () => {
     if (mealNotification?.type === 'remove' && mealNotification?.mealData) {
-      const { day, mealType, recipe, index } = mealNotification.mealData;
+      const { day, mealType, recipe, index, servings } = mealNotification.mealData;
       const updatedMealPlan = JSON.parse(JSON.stringify(mealPlan));
       
       if (!updatedMealPlan[day]) {
@@ -146,7 +209,13 @@ const MealPlanner = () => {
         updatedMealPlan[day][mealType] = [];
       }
       
-      updatedMealPlan[day][mealType].splice(index, 0, recipe);
+      // Add back the correct number of servings
+      for (let i = 0; i < servings; i++) {
+        const mealCopy = { ...recipe };
+        mealCopy.servings = 1; // Each copy has 1 serving
+        updatedMealPlan[day][mealType].push(mealCopy);
+      }
+      
       setMealPlan(updatedMealPlan);
       setMealNotification(null);
     }
@@ -201,13 +270,30 @@ const MealPlanner = () => {
         </div>
       );
     }
+
+    // Group recipes by name and track servings
+    const groupedRecipes = recipes.reduce((acc, recipe) => {
+      const key = recipe.name;
+      if (!acc[key]) {
+        acc[key] = {
+          ...recipe,
+          servings: 1,
+          indices: [recipes.indexOf(recipe)]
+        };
+      } else {
+        acc[key].servings++;
+        acc[key].indices.push(recipes.indexOf(recipe));
+      }
+      return acc;
+    }, {});
+
     return (
       <div className="meal-slot">
         <div className="meal-slot-content-list">
-          {recipes.map((recipe, index) => (
+          {Object.values(groupedRecipes).map((recipe, index) => (
             <div key={index} className="meal-item enhanced-meal-item" style={{ position: 'relative' }}>
               <button
-                onClick={e => handleRemoveMeal(e, day, mealType, index)}
+                onClick={e => handleRemoveMeal(e, day, mealType, recipe.indices[0])}
                 className="remove-meal-button boxed-x enhanced-x-btn"
                 aria-label="Remove meal"
               >
@@ -219,6 +305,23 @@ const MealPlanner = () => {
                 <div className="meal-item-meta">
                   <span>{recipe.calories} cal</span>
                   <span>{recipe.prepTime}</span>
+                </div>
+                <div className="meal-servings-control">
+                  <button 
+                    onClick={e => handleServingChange(e, day, mealType, recipe.indices[0], -1)}
+                    className="serving-button"
+                    aria-label="Decrease servings"
+                  >
+                    -
+                  </button>
+                  <span className="serving-count">{recipe.servings}x</span>
+                  <button 
+                    onClick={e => handleServingChange(e, day, mealType, recipe.indices[0], 1)}
+                    className="serving-button"
+                    aria-label="Increase servings"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
             </div>
@@ -379,6 +482,9 @@ const MealPlanner = () => {
           message={mealNotification.message}
           onClose={() => setMealNotification(null)}
           onUndo={mealNotification.type === 'remove' ? handleUndoRemove : undefined}
+          recipe={mealNotification.mealData?.recipe}
+          mealType={mealNotification.mealData?.mealType}
+          date={mealNotification.mealData?.day}
         />
       )}
     </div>

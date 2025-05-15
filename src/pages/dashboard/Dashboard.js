@@ -74,13 +74,29 @@ const Dashboard = () => {
     };
     if (mealPlan[selectedDate]) {
       Object.entries(mealPlan[selectedDate]).forEach(([mealType, meals]) => {
-        stats.totalMeals += meals.length;
-        meals.forEach(meal => {
-          stats.totalCalories += Number(meal.calories) || 0;
-          stats.nutritionTotals.protein += Number(meal.protein) || 0;
-          stats.nutritionTotals.carbs += Number(meal.carbs) || 0;
-          stats.nutritionTotals.fat += Number(meal.fat) || 0;
-          stats.recentMeals.push({ ...meal, mealType });
+        // Group meals by name and count servings
+        const groupedMeals = meals.reduce((acc, meal) => {
+          const key = meal.name;
+          if (!acc[key]) {
+            acc[key] = {
+              ...meal,
+              mealType,
+              servings: 1
+            };
+          } else {
+            acc[key].servings++;
+          }
+          return acc;
+        }, {});
+
+        // Add grouped meals to recentMeals
+        Object.values(groupedMeals).forEach(meal => {
+          stats.totalMeals += meal.servings;
+          stats.totalCalories += (Number(meal.calories) || 0) * meal.servings;
+          stats.nutritionTotals.protein += (Number(meal.protein) || 0) * meal.servings;
+          stats.nutritionTotals.carbs += (Number(meal.carbs) || 0) * meal.servings;
+          stats.nutritionTotals.fat += (Number(meal.fat) || 0) * meal.servings;
+          stats.recentMeals.push(meal);
         });
       });
     }
@@ -211,7 +227,7 @@ const Dashboard = () => {
               {dashboardStats.recentMeals.map((meal, index) => (
                 <div key={index} className="meal-item">
                   <div className="meal-info">
-                    <h3>{meal.name}</h3>
+                    <h3>{meal.servings > 1 ? `(${meal.servings}x) ${meal.name}` : meal.name}</h3>
                   </div>
                   <div className="meal-time">
                     <span className="meal-type">{meal.mealType}</span>

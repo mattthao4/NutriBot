@@ -243,6 +243,7 @@
   font-size: 0.75rem;
   color: #64748b;
   margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
 }
 
 .remove-meal-button {
@@ -738,7 +739,7 @@
   min-width: 220px;
   max-width: 320px;
   height: auto;
-  min-height: 90px;
+  min-height: 120px;
   position: relative;
 }
 .enhanced-meal-item-image {
@@ -754,6 +755,10 @@
   min-width: 0;
   font-size: 1.1rem;
   padding-right: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
 }
 .enhanced-x-btn {
   top: 10px !important;
@@ -795,7 +800,7 @@
     padding: 0.5rem;
     min-width: 150px;
     max-width: 240px;
-    min-height: 60px;
+    min-height: 80px;
   }
   .enhanced-meal-item-image {
     width: 36px;
@@ -844,4 +849,47 @@
 .week-navigation .button:hover {
   background: var(--primary-1);
   color: #fff;
+}
+
+.meal-servings-control {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  padding: 0.25rem;
+  background: var(--surface-color);
+  border-radius: 0.25rem;
+  width: fit-content;
+  margin-left: auto;
+}
+
+.serving-button {
+  background: var(--primary-1);
+  color: var(--text-color);
+  border: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: bold;
+  transition: background-color 0.2s;
+  padding: 0;
+  line-height: 1;
+}
+
+.serving-button:hover {
+  background: var(--primary-2);
+}
+
+.serving-count {
+  font-size: 0.85rem;
+  font-weight: 500;
+  min-width: 1.75rem;
+  text-align: center;
+  padding: 0 0.25rem;
 } 
