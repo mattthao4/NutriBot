@@ -17,7 +17,6 @@ A modern web application for meal planning, recipe management, and nutritional t
 - **State Management**: Recoil
 - **Routing**: React Router
 - **Styling**: CSS with modern design principles
-- **Icons**: Heroicons
 - **Authentication**: Custom AuthContext with localStorage persistence
 
 ## Project Structure
@@ -80,13 +79,3 @@ npm start
 - **Eli Goldberger** - *Authentication system*
 - **Daniel Bauer** - *UI/UX Design & Frontend Development*
 - **Lukas Singer** - *Backend Integration & Data Management*
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- React.js community for the amazing framework
-- Heroicons for the beautiful icon set
-- All contributors who have helped shape this project 
